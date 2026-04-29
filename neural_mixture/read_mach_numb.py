@@ -31,15 +31,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from scipy.signal import savgol_filter
-
-# ── Module-level defaults (overridable at runtime via main() CLI args) ────────
-c_ref = 0.07
-SURFACE_Z = 0.01
-SURFACE_ATOL = 1e-4
-
-CAMBER_SMOOTH_POLY = 2
-CAMBER_SMOOTH_FRAC = 0.08
-
 mp1_pattern = "{case}_MP1.csv"
 mp2_pattern = "{case}_MP2.csv"
 
@@ -96,7 +87,7 @@ def _project_sn(xy, ctr, e_s, e_n):
     return X @ e_s, X @ e_n
 
 
-def _savgol_window(nbins, frac=CAMBER_SMOOTH_FRAC, poly=CAMBER_SMOOTH_POLY):
+def _savgol_window(nbins, frac=0.08, poly=2):
     w = int(max(5, round(nbins * frac)))
     if w % 2 == 0:
         w += 1
@@ -151,8 +142,8 @@ def _build_camber_from_surface(surface_df, nbins=200):
     n_max_f = _fill_nan(centers, n_max)
 
     w = _savgol_window(nbins)
-    n_min_s = savgol_filter(n_min_f, window_length=w, polyorder=CAMBER_SMOOTH_POLY, mode="interp")
-    n_max_s = savgol_filter(n_max_f, window_length=w, polyorder=CAMBER_SMOOTH_POLY, mode="interp")
+    n_min_s = savgol_filter(n_min_f, window_length=w, polyorder=2, mode="interp")
+    n_max_s = savgol_filter(n_max_f, window_length=w, polyorder=2, mode="interp")
 
     n_c = 0.5 * (n_max_s + n_min_s)
     frame = {"ctr": ctr, "e_s": e_s, "e_n": e_n, "s0": s0, "span": span}
@@ -164,10 +155,10 @@ def _interp_n_c(s_norm_points, centers, n_c):
 
 
 def build_side_curves_and_classify(air_df, nbins=200):
-    mask_surface = np.isclose(air_df["Points_2"].to_numpy(float), SURFACE_Z, atol=SURFACE_ATOL)
+    mask_surface = np.isclose(air_df["Points_2"].to_numpy(float), SURFACE_Z, atol=1e-4)
     surface = air_df.loc[mask_surface].copy()
     if surface.empty:
-        raise RuntimeError(f"No surface points found (|z-{SURFACE_Z}| < {SURFACE_ATOL}).")
+        raise RuntimeError(f"No surface points found (|z-{SURFACE_Z}| < {1e-4}).")
 
     s_norm_surf, n_surf, centers, n_c_centers, frame = _build_camber_from_surface(
         surface, nbins=nbins
@@ -334,7 +325,7 @@ def main():
                 print(f"[WARN] {c}: suction/pressure side classification failed ({e}) -> fallback")
                 air["zone"] = "suctSide"
                 mask_surface = np.isclose(
-                    air["Points_2"].to_numpy(float), SURFACE_Z, atol=SURFACE_ATOL
+                    air["Points_2"].to_numpy(float), SURFACE_Z, atol=1e-4
                 )
                 suctSide = air[mask_surface].sort_values("x_over_l")
                 presSide = air.head(0)
@@ -366,8 +357,8 @@ def main():
     ax_mis.legend(ncols=2)
 
     for c in cases:
-        mp1 = mp1_pattern.format(case=cases[c]["fName"])
-        mp2 = mp2_pattern.format(case=cases[c]["fName"])
+        mp1 = f"{cases[c]['fName']}_MP1.csv"
+        mp2 = f"{cases[c]['fName']}_MP2.csv"
         if cases[c]["solver"] == 'MUSICAA':
             div = 1000.0
         else:
