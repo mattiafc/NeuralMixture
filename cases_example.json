@@ -1,0 +1,8 @@
+{
+    "baseline": {
+        "case":  "case.foam",
+        "fName": "Baseline",
+        "color": "tab:green",
+        "label": "sim_1"
+    }
+}

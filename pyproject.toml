@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools >= 46.4.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "neural-mixture"
+version = "0.1.0"
+requires-python = ">=3.10"
+description = "Post-processing tools for OpenFOAM RANS simulations vs LES reference data."
+readme = "README.md"
+license = {file = "LICENSE"}
+dependencies = [
+    "numpy",
+    "pandas",
+    "matplotlib",
+    "scipy",
+]
+
+[tool.setuptools.packages.find]
+include = ["neural_mixture*"]
+
+[project.scripts]
+read_mach_numb = "neural_mixture.read_mach_numb:main"
