@@ -31,8 +31,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from scipy.signal import savgol_filter
-mp1_pattern = "{case}_MP1.csv"
-mp2_pattern = "{case}_MP2.csv"
 
 
 # ── Helper functions (unchanged from standalone script) ───────────────────────
