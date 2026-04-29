@@ -1,0 +1,11 @@
+LICENSE
+README.md
+pyproject.toml
+neural_mixture/__init__.py
+neural_mixture/read_mach_numb.py
+neural_mixture.egg-info/PKG-INFO
+neural_mixture.egg-info/SOURCES.txt
+neural_mixture.egg-info/dependency_links.txt
+neural_mixture.egg-info/entry_points.txt
+neural_mixture.egg-info/requires.txt
+neural_mixture.egg-info/top_level.txt

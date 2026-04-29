@@ -1,0 +1,2 @@
+[console_scripts]
+read_mach_numb = neural_mixture.read_mach_numb:main
