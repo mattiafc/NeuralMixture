@@ -2,3 +2,5 @@ git status oppure git branch mostra lo stato e la branch in cui mi trovo ora
 git checkout -b nomeBranch: crea la branch/si sposta sulla branch nomeBranch
 
 TontoTonro
+
+Tutto
