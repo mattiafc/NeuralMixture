@@ -1,2 +1,3 @@
 [console_scripts]
-read_mach_numb = neural_mixture.read_mach_numb:main
+postprocess_compressor = neural_mixture.postprocess_compressor:main
+setup_simulation = neural_mixture.setup_simulation:main

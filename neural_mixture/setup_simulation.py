@@ -32,28 +32,32 @@ def write_model_coefficients(theta_coeff, thetaR_coeff, file_stored):
 
 def update_turbulence_properties(setup_dict, simulation_setup):
         
-        sim_dir = os.path.join(setup_dict["home_directory"], simulation_setup["model"])
+    sim_dir = os.path.join(setup_dict["home_directory"], simulation_setup["model"])
 
-        with open(f'{os.path.join(sim_dir,"constant/turbulenceProperties")}.txt', 'r', encoding='utf-8') as file:
-            turbulence_properties = file.read()
+    with open(f'{os.path.join(sim_dir,"constant/turbulenceProperties")}', 'r', encoding='utf-8') as file:
+        turbulence_properties = file.read()
 
-        if simulation_setup["blending"]:
-            for model in simulation_setup["blending"]:
-                turbulence_properties += '\n\n'
-                turbulence_properties += f'       Theta_{model}  {simulation_setup[f"Theta_{model}"]};\n'
-                turbulence_properties += f'       ThetaR_{model} {simulation_setup[f"ThetaR_{model}"]};\n'
-        else:
+    if simulation_setup["blending"]:
+        turbulence_properties += '       Blending        true;\n\n'
+        for model in simulation_setup["blending"]:
             turbulence_properties += '\n\n'
-            turbulence_properties += f'       Theta  {simulation_setup["theta_coeff"]};\n'
-            turbulence_properties += f'       ThetaR {simulation_setup["thetaR_coeff"]};\n'
+            turbulence_properties += f'       Theta_{model}  {simulation_setup[f"theta_{model}"]};\n'
+            turbulence_properties += f'       ThetaR_{model} {simulation_setup[f"thetaR_{model}"]};\n'
+    else:
+        turbulence_properties += '\n\n'
+        turbulence_properties += '       Blending        false;\n\n'
+        turbulence_properties += f'       Theta  {simulation_setup["theta"]};\n'
+        turbulence_properties += f'       ThetaR {simulation_setup["thetaR"]};\n'
+
+    turbulence_properties += '\n       }\n}'
                 
-        with open(f'{os.path.join(sim_dir,"constant/turbulenceProperties")}.txt', 'w', encoding='utf-8') as file:
-            file.write(write_model_coefficients(simulation_setup["theta_coeff"], simulation_setup["thetaR_coeff"], turbulence_properties))
+    with open(f'{os.path.join(sim_dir,"constant/turbulenceProperties")}', 'w', encoding='utf-8') as file:
+        file.write(turbulence_properties)
 
 def main():
     
     ap = argparse.ArgumentParser(
-        prog="read_mach_numb",
+        prog="setup_simulation",
         description=(
             "Setup an OpenFOAM simulation by copying a baseline case and updating the turbulence properties file with each model coefficients. \n"
             "You can take a look at a sample of the Json file in the examples directory. \n"
@@ -87,6 +91,10 @@ def main():
         
         if simulation_setup["decompose_command"]:
             os.system(f"cd {target_dir} && {simulation_setup['decompose_command']}")
-    
-        if simulation_setup["simulation_command"]:
-            os.system(f"cd {target_dir} && {simulation_setup['simulation_command']} &&")
+
+        # if simulation_setup["simulation_command"]:
+        #     os.system(f"cd {target_dir} && {simulation_setup['simulation_command']} &&")
+
+
+if __name__ == "__main__":
+    main()
