@@ -1,0 +1,16 @@
+{
+    "home_directory": "/home/mciarlatani/DataDrivenML/DatabaseMattia/BackwardFacingStep",
+    "baseline_directory": "Template",
+    "simulations": 
+    {
+        "sim_1":{
+                "model":  "CHAN",
+                "mesh_command": false,
+                "blending": false,
+                "theta": "(0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)",
+                "thetaR": "(0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)",
+                "decompose_command": "decomposePar -latestTime",
+                "simulation_command": "mpirun -np 8 simpleFoam -parallel > log.simpleFoam"
+                }
+    }
+}
