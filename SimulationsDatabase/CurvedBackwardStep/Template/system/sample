@@ -1,0 +1,97 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  2306                                  |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    arch        "LSB;label=32;scalar=64";
+    class       dictionary;
+    location    "system";
+    object      sample;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+
+type            sets;
+libs            (sampling);
+
+writeControl    onEnd;
+
+interpolationScheme cellPoint;
+
+setFormat       raw;
+
+fields          (k k_Frozen U U_Frozen turbulenceProperties:devReff bijDelta bijDeltaFrozen p);
+
+sets
+{
+    Uref
+    {
+        type    cloud;
+        axis    y;
+        points  ((4. 4.75 0.01));
+    }
+
+    x_by_h_0
+    {
+        type    face;
+        axis    y;
+        start   (0. 0 0);
+        end     (0. 9.5 0);
+        nPoints 100;
+    }
+    
+    x_by_h_1.5
+    {
+        type    face;
+        axis    y;
+        start   (1.5 0 0);
+        end     (1.5 9.5 0);
+        nPoints 100;
+    }
+    
+    x_by_h_3
+    {
+        type    face;
+        axis    y;
+        start   (3. 0 0);
+        end     (3. 9.5 0);
+        nPoints 100;
+    }
+    
+    x_by_h_4.5
+    {
+        type    face;
+        axis    y;
+        start   (4.5 0 0);
+        end     (4.5 9.5 0);
+        nPoints 100;
+    }
+    
+    
+    x_by_h_6
+    {
+        type    face;
+        axis    y;
+        start   (6. 0 0);
+        end     (6. 9.5 0);
+        nPoints 100;
+    }
+    x_by_h_7.5
+    {
+        type    face;
+        axis    y;
+        start   (7.5 0 0);
+        end     (7.5 9.5 0);
+        nPoints 100;
+    }
+    
+}
+
+
+// ************************************************************************* //

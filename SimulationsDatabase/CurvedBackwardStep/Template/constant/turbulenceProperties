@@ -1,0 +1,76 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  v2406                                 |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      turbulenceProperties;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+simulationType          RAS;
+
+/*RAS
+{
+    RASModel            kOmegaSST;
+
+    turbulence          on;
+
+    printCoeffs         on;
+} */
+
+
+// ************************************************************************* //
+RAS
+{
+
+        RASModel            kOmegaSSTLMInternalBlend_NP;
+
+        turbulence      on;
+
+        printCoeffs     on;
+        kOmegaSSTLMInternalBlend_NPCoeffs
+        {
+        // Default SST coefficients
+        alphaK1     0.85;
+        alphaK2     1;
+        alphaOmega1 0.5;
+        alphaOmega2 0.856;
+        beta1       0.075;
+        beta2       0.0828;
+        betaStar    0.09;
+        //gamma1      5/9;
+        gamma2      0.44;
+        a1          0.31;
+        b1          1;
+        c1          10;
+        F3          false;
+
+        // Default LM coefficients
+        ca1         2;
+        ca2         0.06;
+        ce1         1;
+        ce2         50;
+        //Altered cThetat coefficient
+        cThetat     1000;
+        sigmaThetat 2;
+
+        lambdaErr   1e-6;
+        maxLambdaIter 30;
+
+        omegaInf        1e-8;
+
+        numInvar        2;
+
+        degreeP        4; // The polynomial in invariants I1 and I2 is of order 4
+
+        lambdaMax        3;
+
+        UseExactbDelta	false;
+
+        h_max_active_terms	1;

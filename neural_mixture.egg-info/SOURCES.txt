@@ -2,7 +2,9 @@ LICENSE
 README.md
 pyproject.toml
 neural_mixture/__init__.py
-neural_mixture/read_mach_numb.py
+neural_mixture/extract_data_all.py
+neural_mixture/postprocess_compressor.py
+neural_mixture/setup_simulation.py
 neural_mixture.egg-info/PKG-INFO
 neural_mixture.egg-info/SOURCES.txt
 neural_mixture.egg-info/dependency_links.txt
