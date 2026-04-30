@@ -1,0 +1,5 @@
+/* compressibleTurbulenceModel.C is NOT compiled here -- it is already */
+/* provided by the standard libcompressibleTurbulenceModels.so          */
+turbulentFluidThermoModels/turbulentFluidThermoModels.C
+
+LIB = $(FOAM_USER_LIBBIN)/libmyCompressibleTurbulenceModels

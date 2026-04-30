@@ -1,0 +1,4 @@
+SOURCE = \
+simpleFoamFeatures_NP.C \
+
+# sources

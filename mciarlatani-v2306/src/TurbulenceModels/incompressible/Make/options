@@ -1,0 +1,14 @@
+EXE_INC = \
+	-I../turbulenceModels/lnInclude \
+	-I$(LIB_SRC)/transportModels \
+	-I$(LIB_SRC)/finiteVolume/lnInclude \
+	-I$(LIB_SRC)/meshTools/lnInclude \
+	-I../incompressible/lnInclude \
+	-I/home/rebecca29/miniconda3/envs/fenics-env/include
+LIB_LIBS = \
+	-lincompressibleTransportModels \
+	-lturbulenceModels \
+	-lfiniteVolume \
+	-lmeshTools \
+	-lincompressibleTurbulenceModels \
+	-lmpi
