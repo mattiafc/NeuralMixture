@@ -1,9 +1,11 @@
 {
     "home_directory": "/home/mciarlatani/DataDrivenML/DatabaseMattia/BackwardFacingStep",
     "baseline_directory": "Template",
+
     "simulations": 
     {
-        "sim_1":{
+        "channel_flow":
+            {
                 "model":  "CHAN",
                 "mesh_command": false,
                 "blending": false,
@@ -11,6 +13,43 @@
                 "thetaR": "(0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)",
                 "decompose_command": "decomposePar -latestTime",
                 "simulation_command": "mpirun -np 8 simpleFoam -parallel > log.simpleFoam"
-                }
+            },
+
+        "jet_ANSJ":
+            {
+                "model":  "ANSJ",
+                "mesh_command": false,
+                "blending": false,
+                "theta": "(0.25 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)",
+                "thetaR": "(0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)",
+                "decompose_command": "decomposePar -latestTime",
+                "simulation_command": "mpirun -np 8 simpleFoam -parallel > log.simpleFoam"
+            },
+
+        "separated_flows":
+            {
+                "model":  "SEP",
+                "mesh_command": false,
+                "blending": false,
+                "theta": "(0.25 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)",
+                "thetaR": "(0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)",
+                "decompose_command": "decomposePar -latestTime",
+                "simulation_command": "mpirun -np 8 simpleFoam -parallel > log.simpleFoam"
+            },
+
+        "blending":
+            {
+                "model":  "CHAN",
+                "mesh_command": false,
+                "blending": ["model_0", "model_1", "model_2"],
+                "theta_model_0": "(0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 `00 0 0 0 0 0 0 0 0 0 0 0)",
+                "thetaR_model_0": "(0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)",
+                "theta_model_1": "(0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 `00 0 0 0 0 0 0 0 0 0 0 0)",
+                "thetaR_model_1": "(0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)",
+                "theta_model_2": "(0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 `00 0 0 0 0 0 0 0 0 0 0 0)",
+                "thetaR_model_2": "(0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)",
+                "decompose_command": "decomposePar -latestTime",
+                "simulation_command": "mpirun -np 8 simpleFoam -parallel > log.simpleFoam"
+            }
     }
 }

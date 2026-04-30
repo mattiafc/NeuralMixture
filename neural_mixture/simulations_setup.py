@@ -35,7 +35,10 @@ def update_turbulence_properties(setup_dict, sims_dict, thetaR_coeff):
             turbulence_properties = file.read()
 
         if sims_dict[sim]["blending"]:
-            pass
+            for model in sims_dict[sim]["blending"]:
+                file_stored += '\n\n'
+                file_stored += f'       Theta_{model}  {theta_coeff};\n'
+                file_stored += f'       ThetaR {thetaR_coeff};\n'
         else:
             with open(f'{os.path.join(target_dir,"constant/turbulenceProperties")}.txt', 'w', encoding='utf-8') as file:
                 file.write(write_model_coefficients(sims_dict[sim]["theta_coeff"], sims_dict[sim]["thetaR_coeff"], turbulence_properties))
