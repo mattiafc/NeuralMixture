@@ -30,28 +30,33 @@ def write_model_coefficients(theta_coeff, thetaR_coeff, file_stored):
     file_stored += '\n       }\n}'
     return file_stored
 
-def update_turbulence_properties(setup_dict, sims_dict, thetaR_coeff):
-        with open(f'{os.path.join(setup_dict["home_directory"], setup_dict["baseline_directory"],"constant/turbulenceProperties")}.txt', 'r', encoding='utf-8') as file:
+def update_turbulence_properties(setup_dict, simulation_setup):
+        
+        sim_dir = os.path.join(setup_dict["home_directory"], simulation_setup["model"])
+
+        with open(f'{os.path.join(sim_dir,"constant/turbulenceProperties")}.txt', 'r', encoding='utf-8') as file:
             turbulence_properties = file.read()
 
-        if sims_dict[sim]["blending"]:
-            for model in sims_dict[sim]["blending"]:
-                file_stored += '\n\n'
-                file_stored += f'       Theta_{model}  {theta_coeff};\n'
-                file_stored += f'       ThetaR {thetaR_coeff};\n'
+        if simulation_setup["blending"]:
+            for model in simulation_setup["blending"]:
+                turbulence_properties += '\n\n'
+                turbulence_properties += f'       Theta_{model}  {simulation_setup[f"Theta_{model}"]};\n'
+                turbulence_properties += f'       ThetaR_{model} {simulation_setup[f"ThetaR_{model}"]};\n'
         else:
-            with open(f'{os.path.join(target_dir,"constant/turbulenceProperties")}.txt', 'w', encoding='utf-8') as file:
-                file.write(write_model_coefficients(sims_dict[sim]["theta_coeff"], sims_dict[sim]["thetaR_coeff"], turbulence_properties))
+            turbulence_properties += '\n\n'
+            turbulence_properties += f'       Theta  {simulation_setup["theta_coeff"]};\n'
+            turbulence_properties += f'       ThetaR {simulation_setup["thetaR_coeff"]};\n'
+                
+        with open(f'{os.path.join(sim_dir,"constant/turbulenceProperties")}.txt', 'w', encoding='utf-8') as file:
+            file.write(write_model_coefficients(simulation_setup["theta_coeff"], simulation_setup["thetaR_coeff"], turbulence_properties))
 
 def main():
     
     ap = argparse.ArgumentParser(
         prog="read_mach_numb",
         description=(
-            "Plot isentropic Mach and total-pressure loss for OpenFOAM RANS cases vs LES.\n\n"
-            "JSON cases format:\n"
-            '  {"tag": {"case": "case.foam", "fName": "Output",\n'
-            '           "color": "tab:green", "label": "sim_1"}}'
+            "Setup an OpenFOAM simulation by copying a baseline case and updating the turbulence properties file with each model coefficients. \n"
+            "You can take a look at a sample of the Json file in the examples directory. \n"
         ),
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
@@ -66,18 +71,22 @@ def main():
 
     for sim in sims_dict:
 
+        simulation_setup = sims_dict[sim]
+
         # Copy the directory
-        target_dir = os.path.join(setup_dict["home_directory"], sims_dict[sim]["model"])
+        target_dir = os.path.join(setup_dict["home_directory"], simulation_setup["model"])
         os.system(f"cp -r {base_dir} {target_dir}")
+
+        update_turbulence_properties(setup_dict, simulation_setup)
 
         # Update the turbulence properties file with the new coefficients
 
         # Mesh, decompose and run the simulation  
-        if sims_dict[sim]["mesh_command"]:
-            os.system(f"cd {target_dir} && {sims_dict[sim]['mesh_command']}")
+        if simulation_setup["mesh_command"]:
+            os.system(f"cd {target_dir} && {simulation_setup['mesh_command']}")
         
-        if sims_dict[sim]["decompose_command"]:
-            os.system(f"cd {target_dir} && {sims_dict[sim]['decompose_command']}")
+        if simulation_setup["decompose_command"]:
+            os.system(f"cd {target_dir} && {simulation_setup['decompose_command']}")
     
-        if sims_dict[sim]["simulation_command"]:
-            os.system(f"cd {target_dir} && {sims_dict[sim]['simulation_command']} &&")
+        if simulation_setup["simulation_command"]:
+            os.system(f"cd {target_dir} && {simulation_setup['simulation_command']} &&")
