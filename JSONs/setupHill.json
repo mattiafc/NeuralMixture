@@ -13,7 +13,7 @@
                 "thetaR": "(0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)",
                 "preprocess_command": "potentialFoam",
                 "decompose_command": "decomposePar -latestTime",
-                "simulation_command": "mpirun -np 8 simpleFoamFeatures -parallel > log.OpenFOAM"
+                "simulation_command": "mpirun -np 12 simpleFoamFeatures -parallel > log.OpenFOAM && reconstructPar -latestTime"
             },
 
         "jet_ANSJ":
@@ -25,7 +25,7 @@
                 "thetaR": "(0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)",
                 "preprocess_command": "potentialFoam",
                 "decompose_command": "decomposePar -latestTime",
-                "simulation_command": "mpirun -np 8 simpleFoamFeatures -parallel > log.OpenFOAM"
+                "simulation_command": "mpirun -np 12 simpleFoamFeatures -parallel > log.OpenFOAM && reconstructPar -latestTime"
             },
 
         "separated_flows":
@@ -37,7 +37,7 @@
                 "thetaR": "(0.681 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)",
                 "preprocess_command": "potentialFoam",
                 "decompose_command": "decomposePar -latestTime",
-                "simulation_command": "mpirun -np 8 simpleFoamFeatures -parallel > log.OpenFOAM"
+                "simulation_command": "mpirun -np 12 simpleFoamFeatures -parallel > log.OpenFOAM && reconstructPar -latestTime"
             }
     },
 
@@ -54,6 +54,6 @@
                 "thetaR_ANSJ": "(0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)",
                 "preprocess_command": "potentialFoam",
                 "decompose_command": "decomposePar -latestTime",
-                "simulation_command": "mpirun -np 8 simpleFoamFeatures -parallel > log.OpenFOAM"
+                "simulation_command": "mpirun -np 12 simpleFoamFeatures -parallel > log.OpenFOAM"
             }
 }

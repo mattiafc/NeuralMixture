@@ -36,12 +36,17 @@ solvers
         mergeLevels      1;    // 3
     }
 
-    "(U|k|omega|epsilon|R|nuTilda)"
+    "(U|k|omega|R|nuTilda)"
     {
         solver          smoothSolver;
-        smoother        symGaussSeidel;
-        tolerance       1e-05;
+        smoother        GaussSeidel;
+        tolerance       1e-7;
         relTol          0.1;
+    }
+
+    Phi
+    {
+        $p; // This tells OpenFOAM to use the same settings as the pressure solver 'p'
     }
 }
 
@@ -116,9 +121,9 @@ SIMPLE
     pRefValue 1;
     residualControl
     {
-          p               	1e-7;//1e-4;
-	  U               1e-7;
-        "(k|epsilon|omega)" 1e-7;
+          p               	1e-14;//1e-4;
+	  U               1e-14;
+        "(k|epsilon|omega)" 1e-14;
 
           //U               	1e-2;//1e-5;
 	  //nut			1e-6;//1e-4;
@@ -128,11 +133,11 @@ SIMPLE
 
 relaxationFactors
 {
-    p               0.5;
-    U               0.5;
+    p               0.3;
+    U               0.3;
     k               0.7;
-    omega           0.7;
-    epsilon         0.7;
+    omega           0.5;
+    epsilon         0.5;
     //R               0.7;
     //nuTilda         0.7;
 }
