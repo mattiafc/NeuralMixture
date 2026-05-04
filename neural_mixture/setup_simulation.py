@@ -3,6 +3,7 @@ import pandas as pd
 import argparse
 import json
 import os
+import subprocess
 
 def OpenFOAM_header():
     header = "/*--------------------------------*- C++ -*----------------------------------*\\"
@@ -49,7 +50,10 @@ def update_turbulence_properties(setup_dict, simulation_setup):
         turbulence_properties += f'       Theta  {simulation_setup["theta"]};\n'
         turbulence_properties += f'       ThetaR {simulation_setup["thetaR"]};\n'
 
-    turbulence_properties += '\n       }\n}'
+    if('kOmegaSSTLM' in turbulence_properties):
+        turbulence_properties += '\n       }\n}'
+    else:
+        turbulence_properties += '\n}'
                 
     with open(f'{os.path.join(sim_dir,"constant/turbulenceProperties")}', 'w', encoding='utf-8') as file:
         file.write(turbulence_properties)
@@ -71,11 +75,11 @@ def main():
         setup_dict = json.load(fh)
     
     base_dir = os.path.join(setup_dict["home_directory"], setup_dict["baseline_directory"])
-    sims_dict = setup_dict["simulations"]
+    simulations_entries = setup_dict["simulations"]
 
-    for sim in sims_dict:
+    for sim in simulations_entries:
 
-        simulation_setup = sims_dict[sim]
+        simulation_setup = simulations_entries[sim]
 
         # Copy the directory
         target_dir = os.path.join(setup_dict["home_directory"], simulation_setup["model"])
@@ -86,14 +90,19 @@ def main():
         # Update the turbulence properties file with the new coefficients
 
         # Mesh, decompose and run the simulation  
-        if simulation_setup["mesh_command"]:
+        if not(simulation_setup.get("mesh_command", False) == False):
             os.system(f"cd {target_dir} && {simulation_setup['mesh_command']}")
+
+        # Mesh, decompose and run the simulation  
+        if not(simulation_setup.get("preprocess_command", False) == False):
+            os.system(f"cd {target_dir} && {simulation_setup['preprocess_command']}")
         
-        if simulation_setup["decompose_command"]:
+        if not(simulation_setup.get("decompose_command", False) == False):
             os.system(f"cd {target_dir} && {simulation_setup['decompose_command']}")
 
-        # if simulation_setup["simulation_command"]:
-        #     os.system(f"cd {target_dir} && {simulation_setup['simulation_command']} &&")
+        if not(simulation_setup.get("simulation_command", False) == False):
+            subprocess.Popen( simulation_setup['simulation_command'], shell=True, 
+                cwd=target_dir, stdout=None, stderr=None)
 
 
 if __name__ == "__main__":

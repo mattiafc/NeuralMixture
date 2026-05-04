@@ -1,0 +1,21 @@
+set logscale y
+set title "OpenFOAM Residuals - Mourad_blend"
+set ylabel 'Initial Residual'
+set xlabel 'Iteration'
+set grid
+
+# Intervallo di aggiornamento in secondi
+refresh_rate = 2
+
+while (1) {
+    plot "< sed -n '/Solving for Ux/s/.*Initial residual = \\([^, ]*\\).*/\\1/p' log.OpenFOAM" title 'Ux' with lines, \
+         "< sed -n '/Solving for Uy/s/.*Initial residual = \\([^, ]*\\).*/\\1/p' log.OpenFOAM" title 'Uy' with lines, \
+         "< sed -n '/Solving for Uz/s/.*Initial residual = \\([^, ]*\\).*/\\1/p' log.OpenFOAM" title 'Uz' with lines, \
+         "< sed -n '/Solving for omega/s/.*Initial residual = \\([^, ]*\\).*/\\1/p' log.OpenFOAM" title 'omega' with lines, \
+         "< sed -n '/Solving for k/s/.*Initial residual = \\([^, ]*\\).*/\\1/p' log.OpenFOAM" title 'k' with lines, \
+         "< sed -n '/Solving for epsilon/s/.*Initial residual = \\([^, ]*\\).*/\\1/p' log.OpenFOAM" title 'epsilon' with lines, \
+         "< sed -n '/Solving for p/s/.*Initial residual = \\([^, ]*\\).*/\\1/p' log.OpenFOAM" title 'p' with lines
+    
+    pause refresh_rate
+    refresh
+}
