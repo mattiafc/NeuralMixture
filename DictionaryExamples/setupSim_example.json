@@ -1,5 +1,5 @@
 {
-    "home_directory": "/home/mciarlatani/DataDrivenML/DatabaseMattia/BackwardFacingStep",
+    "home_directory": "./",
     "baseline_directory": "Template",
 
     "simulations": 
@@ -11,8 +11,9 @@
                 "blending": false,
                 "theta": "(0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)",
                 "thetaR": "(0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)",
+                "preprocess_command": "potentialFoam",
                 "decompose_command": "decomposePar -latestTime",
-                "simulation_command": "mpirun -np 8 simpleFoam -parallel > log.simpleFoam"
+                "simulation_command": "mpirun -np 8 simpleFoamFeatures -parallel > log.OpenFOAM"
             },
 
         "jet_ANSJ":
@@ -22,8 +23,9 @@
                 "blending": false,
                 "theta": "(0.33 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)",
                 "thetaR": "(0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)",
+                "preprocess_command": "potentialFoam",
                 "decompose_command": "decomposePar -latestTime",
-                "simulation_command": "mpirun -np 8 simpleFoam -parallel > log.simpleFoam"
+                "simulation_command": "mpirun -np 8 simpleFoamFeatures -parallel > log.OpenFOAM"
             },
 
         "separated_flows":
@@ -33,9 +35,11 @@
                 "blending": false,
                 "theta": "(0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)",
                 "thetaR": "(0.681 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)",
+                "preprocess_command": "potentialFoam",
                 "decompose_command": "decomposePar -latestTime",
-                "simulation_command": "mpirun -np 8 simpleFoam -parallel > log.simpleFoam"
-            },
+                "simulation_command": "mpirun -np 8 simpleFoamFeatures -parallel > log.OpenFOAM"
+            }
+    },
 
         "blending":
             {
@@ -48,8 +52,8 @@
                 "thetaR_SEP" : "(0.681 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)",
                 "theta_ANSJ" : "(0.33 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)",
                 "thetaR_ANSJ": "(0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)",
+                "preprocess_command": "potentialFoam",
                 "decompose_command": "decomposePar -latestTime",
-                "simulation_command": "mpirun -np 8 simpleFoam -parallel > log.simpleFoam"
+                "simulation_command": "mpirun -np 8 simpleFoamFeatures -parallel > log.OpenFOAM"
             }
-    }
 }
