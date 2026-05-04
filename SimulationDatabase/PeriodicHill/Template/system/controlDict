@@ -1,0 +1,98 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  1.7.0                                 |
+|   \\  /    A nd           | Web:      www.OpenFOAM.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "system";
+    object      controlDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+
+application     simpleFoamFeatures;//
+
+startFrom       latestTime;
+
+//startFrom       startTime;
+
+//startTime       0;
+
+//endTime   50;
+
+//stopAt writeNow;
+
+endTime   5000;
+
+deltaT   1;
+
+writeControl    timeStep;
+
+writeInterval   1;
+
+purgeWrite     1;
+
+writeFormat     ascii;
+
+writePrecision  15;
+
+writeCompression uncompressed;
+
+timeFormat      general;
+
+timePrecision   15;
+
+runTimeModifiable yes;//true;
+
+
+functions
+{
+    #includeFunc "stressComponents"
+    #includeFunc "pressureCoefficient"
+    #includeFunc "sample"
+    #includeFunc "sampleCp"
+    #includeFunc "writeCellCentres"
+    #includeFunc "wallShearStress"
+}
+
+
+libs ("libmyIncompressibleTurbulenceModels.so");
+
+
+
+functions
+{
+
+    fieldAverage1
+    {
+        type            fieldAverage;
+        functionObjectLibs ("libfieldFunctionObjects.so");
+        enabled         true;
+        outputControl   outputTime;
+
+        fields
+        (
+            U
+            {
+                mean        on;
+                prime2Mean  on;
+                base        time;
+            }
+
+            p
+            {
+                mean        on;
+                prime2Mean  on;
+                base        time;
+            }
+        );
+    }
+}
+
+// ************************************************************************* //

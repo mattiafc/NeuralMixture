@@ -1,0 +1,92 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  2.3.1                                 |
+|   \\  /    A nd           | Web:      www.OpenFOAM.org                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "system";
+    object      controlDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+libs ("libmyIncompressibleTurbulenceModels.so");
+application     simpleFoamFeatures;
+
+startFrom       latestTime;//startTime;
+
+
+stopAt          endTime;
+
+endTime         5000;
+
+deltaT          1;
+
+writeControl    timeStep;
+
+writeInterval   1;//5000;
+
+purgeWrite      1;
+
+writeFormat     ascii;
+
+writePrecision  6;
+
+writeCompression off;
+
+timeFormat      general;
+
+timePrecision   6;
+
+runTimeModifiable true;
+
+functions
+{
+    fieldAverage1
+    {
+        type            fieldAverage;
+        functionObjectLibs ( "libfieldFunctionObjects.so" );
+        enabled         true;
+        outputControl   outputTime;
+
+        fields
+        (
+            U
+            {
+                mean        on;
+                prime2Mean  on;
+                base        time;
+            }
+
+            p
+            {
+                mean        on;
+                prime2Mean  on;
+                base        time;
+            }
+        );
+    }
+}
+
+
+
+// ************************************************************************* //
+
+functions
+{
+    #includeFunc "stressComponents"
+    #includeFunc "pressureCoefficient"
+    #includeFunc "sample"
+    #includeFunc "sampleCp"
+    #includeFunc "writeCellCentres"
+    #includeFunc "wallShearStress"
+}
+
+
+
+
+
