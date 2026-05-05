@@ -1,4 +1,24 @@
 import os
+import numpy as np
+import pyvista as pv
+
+def OpenFOAM_header():
+    header = "/*--------------------------------*- C++ -*----------------------------------*\\"
+    header += "| =========                 |                                                 |"
+    header += "| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |"
+    header += "|  \\    /   O peration     | Version:  2.3.0                                 |"
+    header += "|   \\  /    A nd           | Web:      www.OpenFOAM.org                      |"
+    header += "|    \\/     M anipulation  |                                                 |"
+    header += "\\*---------------------------------------------------------------------------*/"
+    header += "FoamFile"
+    header += "{"
+    header += "    version     2.0;"
+    header += "    format      ascii;"
+    header += "    class       dictionary;"
+    header += "    object      blockMeshDict;"
+    header += "}"
+    header += "// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //\n\n"
+    return header
 
 def get_last_modified_folder(case_dir):
     simulation_folders = [folder for folder in os.listdir(case_dir) if os.path.isdir(os.path.join(case_dir, folder)) and any(char.isdigit() for char in folder)]
@@ -116,25 +136,7 @@ def write_scalar_field(simul_folder, time_folder, field_name, internal_field, bo
     with open(internal_field_file_path, "w") as file:
 
         
-        file.write(f"/*--------------------------------*- C++ -*----------------------------------* \n")
-        file.write(f"| =========                 |                                                 |\n")
-        file.write(f"| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |\n")
-        file.write(f"|  \\    /   O peration     | Version:  2306                                  |\n")
-        file.write(f"|   \\  /    A nd           | Website:  www.openfoam.com                      |\n")
-        file.write(f"|    \\/     M anipulation  |                                                 |\n")
-        file.write(f"\*---------------------------------------------------------------------------*/\n")
-
-        
-        file.write("FoamFile\n")
-        file.write("{\n")
-        file.write("\tversion     2.0;\n")
-        file.write("\tformat      ascii;\n")
-        file.write("\tarch        \"LSB;label=32;scalar=64\";\n")
-        file.write("\tclass       volScalarField;\n")
-        file.write(f"\tlocation    \"{time_folder}\";\n")
-        file.write(f"\tobject      {field_name};	\n")
-        file.write("}\n")
-        file.write("// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //\n\n")
+        file.write(OpenFOAM_header())
 
         
         nCells = len(internal_field)
@@ -167,3 +169,115 @@ def write_scalar_field(simul_folder, time_folder, field_name, internal_field, bo
                     file.write(")\n;\n\t}\n")
                 
         file.write("}\n\n\n// ************************************************************************* //")
+
+def load_OpenFOAM_data(path):
+
+    '''Load OpenFOAM data from the specified path using PyVista.'''
+
+    with open(f"{path}/case.foam", 'w') as _ : pass  # Just create an empty file
+    reader = pv.OpenFOAMReader(f"{path}/case.foam")
+    time_values = reader.time_values
+    reader.set_active_time_value(time_values[-1])
+    mesh = reader.read()
+    internalMesh = mesh["internalMesh"]
+    boundaries = mesh["boundary"]
+    # nbr_points = internalMesh.n_points #M
+    # nbr_cells = internalMesh.n_cells #M
+    
+    return internalMesh, boundaries
+
+def write_OpenFOAM_with_boundaries(path_to_case, input_file, output_file, time_value, internalMesh, boundaries):
+
+    # Read content of the original file
+    with open(f"{path_to_case}/{time_value}/{input_file}", 'r') as fin:
+        content = fin.readlines()
+    
+    patches = boundaries.keys()
+    cells_coords_mesh = internalMesh.cell_centers().points
+    
+    nbr_cells = len(internalMesh[input_file])
+
+    new_content = ''
+    # Perform modifications on the internal field values
+    for _, line in enumerate(content):
+        
+        if line.startswith('    location'):
+            new_content += f'    location    \"{time_value}\";\n'
+        elif line.startswith('    class'):
+            new_content += line
+            if line.split()[1] == 'volScalarField;' :
+                nbr_comp = 1
+                type_comp = 'scalar'
+            elif line.split()[1] == 'volVectorField;' :
+                nbr_comp = 3
+                type_comp = 'vector'
+            elif line.split()[1] == 'volSymmTensorField;' :
+                nbr_comp = 6
+                type_comp = 'symmTensor'
+            
+        elif line.startswith('    object'):
+            new_content += f'    object    {output_file};\n'
+            
+        elif line.startswith('internalField   nonuniform List<scalar>'):
+            new_content += f'internalField   nonuniform List<scalar>\n{nbr_cells}\n(\n'
+            for value in list(internalMesh[input_file]):
+                new_content += f'{value}\n' 
+            new_content +=  ');\n\n'
+            break
+
+        elif line.startswith('internalField   nonuniform List<vector>'):
+            new_content += f'internalField   nonuniform List<vector>\n{nbr_cells}\n(\n'
+            for values in internalMesh[input_file]:
+                v1, v2, v3 = values
+                new_content += f'({v1} {v2} {v3})\n' 
+            new_content +=  ');\n\n'
+            break
+
+        elif line.startswith('internalField   nonuniform List<symmTensor>'):
+            new_content += f'internalField   nonuniform List<symmTensor>\n{nbr_cells}\n(\n'
+            for values in internalMesh[input_file]:
+                v1, v2, v3, v4, v5, v6 = values
+                new_content += f'({v1} {v2} {v3} {v4} {v5} {v6})\n' 
+            new_content +=  ');\n\n'
+            break
+
+        else :
+            new_content += line	
+    
+    new_content += "boundaryField\n{\n"
+    
+    for patch_name in patches:
+
+        if patch_name in ['front', 'back', 'axis', 'frontAndBack', 'sides1_half0', 'sides1_half1', 'sides2_half0', 'sides2_half1', 'sideRight_half0', 'sideRight_half1', 'sideLeft_half0', 'sideLeft_half1']:
+            new_content += f"\t{patch_name}\n\t{{\n\t\ttype\t\t\tempty;\n\t}}\n"
+        
+        elif patch_name in ['wedge1', 'wedge2'] :
+            new_content += f"\t{patch_name}\n\t{{\n\t\ttype\t\t\twedge;\n\t}}\n"
+        
+        elif patch_name in ['inout1_half0', 'inout1_half1', 'inout2_half0', 'inout2_half1', 'inlet_half0', 'inlet_half1', 'outlet_half0', 'outlet_half1']:
+            new_content += f"\t{patch_name}\n\t{{\n\t\ttype\t\t\tcyclic;\n\t\tvalue\t\tuniform 0;\n\t}}\n"
+        
+        elif patch_name == 'symmetry':
+            new_content += f"\t{patch_name}\n\t{{\n\t\ttype\t\t\tsymmetryPlane;\n\t}}\n"
+        
+        else :
+            patch_values_array = boundaries[patch_name][input_file]
+            bd_points = boundaries[patch_name].cell_centers().points
+            nbr_values_patch = len(patch_values_array)			
+            new_content += f"\t{patch_name}\n\t{{\n\t\ttype\t\t\tcalculated;\n\t\tvalue\t\t\tnonuniform List<{type_comp}>\n{nbr_values_patch}\n(\n"
+
+            for i_, _ in enumerate(patch_values_array):
+                idx = np.argmin(np.linalg.norm( bd_points[i_] - cells_coords_mesh, axis=1))
+                nearest_value = internalMesh[input_file][idx]
+                if nbr_comp == 1:	
+                    new_content += f'{nearest_value}\n' #f'{values_bd}\n' 
+                else :
+                    new_content += '('
+                    for val in nearest_value : new_content += f'{val} '#f'{val} '
+                    new_content += ')\n' 
+            new_content +=  ");\n\t}\n"
+    new_content +=  "}"
+
+    # Write modified content to a new file
+    with open(f'{path_to_case}/{time_value}/{output_file}', 'w') as fout:
+        fout.writelines(new_content)

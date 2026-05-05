@@ -5,25 +5,6 @@ import json
 import os
 import subprocess
 
-def OpenFOAM_header():
-    header = "/*--------------------------------*- C++ -*----------------------------------*\\"
-    header += "/*--------------------------------*- C++ -*----------------------------------*\\"
-    header += "| =========                 |                                                 |"
-    header += "| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |"
-    header += "|  \\    /   O peration     | Version:  2.3.0                                 |"
-    header += "|   \\  /    A nd           | Web:      www.OpenFOAM.org                      |"
-    header += "|    \\/     M anipulation  |                                                 |"
-    header += "\\*---------------------------------------------------------------------------*/"
-    header += "FoamFile"
-    header += "{"
-    header += "    version     2.0;"
-    header += "    format      ascii;"
-    header += "    class       dictionary;"
-    header += "    object      blockMeshDict;"
-    header += "}"
-    header += "// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //"
-    return header
-
 def write_model_coefficients(theta_coeff, thetaR_coeff, file_stored):
     file_stored += '\n\n'
     file_stored += f'       Theta  {theta_coeff};\n'

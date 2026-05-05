@@ -11,8 +11,9 @@ from scipy.interpolate      import griddata
 from sklearn.model_selection            import cross_val_score
 from sklearn.ensemble                   import RandomForestRegressor
 from sklearn.metrics                    import mean_absolute_error
+from utils_OpenFOAM                     import *
 
-def create_dic_data(FeaturesChoice, cases, models) :
+def create_dic_data(home_directory, cases) :
     
     '''
     Create a dictionary to store internal mesh and boundary data for each case and model.\n
@@ -21,19 +22,24 @@ def create_dic_data(FeaturesChoice, cases, models) :
     '''
     dic_data = {}
 
+    print(f"============================================")
     for case in cases:
-        print(f"------ load case {case}--------------------------")
+
+        print(f"Loading case {case}")
         dic_data.update({case:{}})
 
-        for model in models:
-            path = f"{FeaturesChoice}/{case}/{model}"
+        for model in cases[case]["models"].keys():
+            path = os.path.join(home_directory, case, model)
             internalMesh, boundaries = load_OpenFOAM_data(path)
-            print (f"model {model}")
             dic_data[case].update({model:{"internalMesh":internalMesh, "boundary": boundaries, "nCells":len(internalMesh.cell_centers().points)}})
+    
+    print(f"============================================")
             
     return dic_data
 
-def mixture_of_expert_Grid_search(dic_data, sigma):
+def mixture_of_expert_Grid_search(dic_data, feature_names):
+
+    print(f"=============================================================================")
 
     features = {}
     weightsU ={}
@@ -52,19 +58,20 @@ def mixture_of_expert_Grid_search(dic_data, sigma):
             
             for model in dic_data[case]:
                 if model != 'Frozen':
-                    print(case, model)
                     U_model = dic_data[case][model]['internalMesh']['U'][:,0:2]#.reshape((-1,1)) # changed rebecca 
                     
-                    if case == "LRN_OGV_trans" or case == "LRN_OGV_trans_OP1":
-                        U_HF = (U_HF - U_HF.mean(axis=0))/ U_HF.std(axis=0)
-                        U_model = (U_model - U_model.mean(axis=0)) / U_model.std(axis=0)
+                    # if case == "LRN_OGV_trans" or case == "LRN_OGV_trans_OP1":
+                    #     U_HF = (U_HF - U_HF.mean(axis=0))/ U_HF.std(axis=0)
+                    #     U_model = (U_model - U_model.mean(axis=0)) / U_model.std(axis=0)
                     list_U_models.append(U_model)
                     
-                    features[case].update({model : np.hstack([np.array(dic_data[case][model]['internalMesh'][f'eta_{k_}']).reshape((-1,1)) for k_ in range(1,12)]) }) 
+                    features[case].update({model : np.hstack([np.array(dic_data[case][model]['internalMesh'][feat]).reshape((-1,1)) for feat in feature_names]) }) 
 
             
-            weightsU_case = select_best_weights_sigma(U_HF, list_U_models)
+            weightsU_case, best_sigma = select_best_weights_sigma(U_HF, list_U_models, [1., 0.5, 1e-1, 0.5e-1, 1e-2, 0.5e-2, 1e-3, 0.5e-3, 1e-4])
             weightsU.update({case : np.hstack([ np.array( w_ / sum(weightsU_case)).reshape((-1,1)) for w_ in weightsU_case]) })
+
+            print(f"Computed weights for case {case}; best sigma is {best_sigma:.3f}")
 
             # boundaries
             ErrorUV = np.zeros(U_HF.shape); ErrorUV[:,:] = U_HF[:,:]
@@ -75,13 +82,12 @@ def mixture_of_expert_Grid_search(dic_data, sigma):
                 ErrorUV -= weightsU_case[j_].reshape(-1, 1) * list_U_models[j_]
                 # broadcasting → (N,1)*(N,2) = (N,2)
             norm_ErrorUV = np.linalg.norm(ErrorUV)
-            # print(f'|| U,V_models * W - (U,V)_ref || = {norm_ErrorUV}')
+
+    print(f"=============================================================================")
         
     return weightsU, features
 
-def select_best_weights_sigma(U_HF, list_U_models):
-
-    sigma_list = [1., 0.5, 1e-1, 0.5e-1, 1e-2, 0.5e-2, 1e-3, 0.5e-3, 1e-4]
+def select_best_weights_sigma(U_HF, list_U_models, sigma_list):
 
     all_weights = []
     error_sigma = []
@@ -101,10 +107,8 @@ def select_best_weights_sigma(U_HF, list_U_models):
           
     min_index = np.argmin(error_sigma)
     best_weights = all_weights[min_index]
-
-    print(f'Best sigma is {sigma_list[np.argmin(error_sigma)]}')
      
-    return best_weights
+    return best_weights, sigma_list[np.argmin(error_sigma)]
 
 def calculate_error_(U_HF, list_U_models, weightsU_case):
      
@@ -360,6 +364,14 @@ def plot_weights_exact_predicted(path_save, C_coords, domain_bounds, weights_exa
     plt.savefig(f'{path_save}_weights_exact_predicted_{weightName}.png')
     # plt.show()
     plt.close()
+
+def postprocess_jet(FeaturesChoice, dic_data, models, whichJet="Jet_NearSonic"):
+    make_symm_Jet_data_on_PIVsubdomain(FeaturesChoice, dic_data, models, whichJet)
+    export_Jet_foam_files(FeaturesChoice, models, dic_data, whichJet, 'projected', 5000)
+    restrict_Jet_data_to_upper_half_PIV_domain_bounds(FeaturesChoice, dic_data, models, whichJet)
+    export_Jet_foam_files(FeaturesChoice, models, dic_data, whichJet, 'restricted', 5000)
+    augment_Jet_data_to_upper_half_PIV_domain_bounds(FeaturesChoice, dic_data, models, whichJet)
+    return
     
 def make_symm_Jet_data_on_PIVsubdomain(FeaturesChoice, dic_data, models, whichJet):
     ''' 
@@ -396,8 +408,8 @@ def make_symm_Jet_data_on_PIVsubdomain(FeaturesChoice, dic_data, models, whichJe
 
         if model=='Frozen' :
             upper_nearest_indices = indices_upper_half
-        else : upper_nearest_indices =
-            np.argmin(distances, axis=1)
+        else : 
+            upper_nearest_indices = np.argmin(distances, axis=1)
         
         
         mesh_Jet = mesh_Jet.rotate_x(-180, inplace=False)

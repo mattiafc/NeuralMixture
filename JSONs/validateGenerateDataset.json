@@ -1,0 +1,40 @@
+{
+    "simulation_home": "/home/mciarlatani/DataDrivenML/Database",
+    "output_directory": "/home/mciarlatani/DataDrivenML/MachineLearning",
+    "features":["eta_1","eta_2","eta_3","eta_4","eta_5","eta_6","eta_7","eta_8","eta_9","eta_10","eta_11"],
+
+    "cases":
+    {
+        "Jet_NearSonic":
+        {
+            "sub_directory":"Jet_NearSonic",
+            "models":{"Frozen":"5000","ANSJ":"5000","CHAN":"5000","SEP":"5000"},
+            "jet":true
+        },
+
+        "CD12600":
+        {
+            "sub_directory":"CD12600",
+            "models":{"Frozen":"5000","ANSJ":"5000","CHAN":"5000","SEP":"5000"}
+        },
+
+        "channel1000_2D":
+        {
+            "sub_directory":"channel1000_2D",
+            "models":{"Frozen":"5000","ANSJ":"5000","CHAN":"5000","SEP":"5000"}
+        },
+
+        "PH10595":
+        {
+            "sub_directory":"PH10595",
+            "models":{"Frozen":"5000","ANSJ":"5000","CHAN":"5000","SEP":"5000"}
+        },
+
+        "CBFS13700":
+        {
+            "sub_directory":"CBFS13700",
+            "models":{"Frozen":"5000","ANSJ":"5000","CHAN":"5000","SEP":"5000"}
+        }
+    }
+
+}
