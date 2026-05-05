@@ -12,7 +12,7 @@
                 "theta": "(0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)",
                 "thetaR": "(0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)",
                 "preprocess_command": "potentialFoam",
-                "simulation_command": "rhoSimpleFoamFeatures > log.OpenFOAM && reconstructPar -latestTime"
+                "simulation_command": "rhoSimpleFoamFeatures_NP > log.OpenFOAM && reconstructPar -latestTime"
             },
 
         "jet_ANSJ":
@@ -23,7 +23,18 @@
                 "theta": "(0.33 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)",
                 "thetaR": "(0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)",
                 "preprocess_command": "potentialFoam",
-                "simulation_command": "rhoSimpleFoamFeatures > log.OpenFOAM && reconstructPar -latestTime"
+                "simulation_command": "rhoSimpleFoamFeatures_NP > log.OpenFOAM && reconstructPar -latestTime"
+            },
+
+        "jet_ANSJp25":
+            {
+                "model":  "ANSJp25",
+                "mesh_command": false,
+                "blending": false,
+                "theta": "(0.25 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)",
+                "thetaR": "(0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)",
+                "preprocess_command": "potentialFoam",
+                "simulation_command": "rhoSimpleFoamFeatures_NP > log.OpenFOAM && reconstructPar -latestTime"
             },
 
         "separated_flows":
@@ -34,7 +45,7 @@
                 "theta": "(0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)",
                 "thetaR": "(0.681 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)",
                 "preprocess_command": "potentialFoam",
-                "simulation_command": "rhoSimpleFoamFeatures > log.OpenFOAM && reconstructPar -latestTime"
+                "simulation_command": "rhoSimpleFoamFeatures_NP > log.OpenFOAM && reconstructPar -latestTime"
             }
     },
 
@@ -50,6 +61,6 @@
                 "theta_ANSJ" : "(0.33 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)",
                 "thetaR_ANSJ": "(0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)",
                 "preprocess_command": "potentialFoam",
-                "simulation_command": "rhoSimpleFoamFeatures > log.OpenFOAM"
+                "simulation_command": "rhoSimpleFoamFeatures_NP > log.OpenFOAM"
             }
 }
