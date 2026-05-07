@@ -1,4 +1,5 @@
 import os
+import shutil
 import numpy as np
 import pyvista as pv
 
@@ -293,3 +294,76 @@ def write_OpenFOAM_with_boundaries(path_to_case, input_file, output_file, time_v
     # Write modified content to a new file
     with open(f'{path_to_case}/{time_value}/{output_file}', 'w') as fout:
         fout.writelines(new_content)
+
+
+def generate_FOAM_case_from_pyvista(path_output, internalMesh, boundaries, source_polymesh_path, time_value=5000):
+    """
+    Generate an OpenFOAM case directory from PyVista mesh data.
+
+    Parameters
+    ----------
+    path_output          : str   output case root directory
+    internalMesh         : pv.UnstructuredGrid  internal mesh with field arrays
+    boundaries           : pv.CompositeDataSet  boundary patches (keys used for boundaryField)
+    source_polymesh_path : str   path to an existing constant/polyMesh to copy
+    time_value           : int   time step folder name (default 5000)
+    """
+    time_dir     = os.path.join(path_output, str(time_value))
+    polymesh_dir = os.path.join(path_output, 'constant', 'polyMesh')
+    os.makedirs(time_dir,     exist_ok=True)
+    os.makedirs(polymesh_dir, exist_ok=True)
+
+    # --- Copy polyMesh from source case ---
+    for fname in os.listdir(source_polymesh_path):
+        src = os.path.join(source_polymesh_path, fname)
+        dst = os.path.join(polymesh_dir, fname)
+        if os.path.isfile(src):
+            shutil.copy2(src, dst)
+
+    # --- Write fields ---
+    QoIs_list = list(dict.fromkeys(internalMesh.cell_data.keys()))
+
+    for QoI in QoIs_list:
+        data = np.array(internalMesh[QoI])
+        n_cells = len(data)
+
+        if data.ndim == 1:
+            field_class, field_type = 'volScalarField',     'scalar'
+        elif data.shape[1] == 3:
+            field_class, field_type = 'volVectorField',     'vector'
+        elif data.shape[1] == 6:
+            field_class, field_type = 'volSymmTensorField', 'symmTensor'
+        else:
+            print(f"Skipping {QoI}: unsupported shape {data.shape}")
+            continue
+
+        with open(os.path.join(time_dir, QoI), 'w') as f:
+            f.write(OpenFOAM_header(field_class, QoI))
+            f.write('dimensions      [0 0 0 0 0 0 0];\n\n')
+
+            if field_type == 'scalar':
+                f.write(f'internalField   nonuniform List<scalar>\n{n_cells}\n(\n')
+                for v in data:
+                    f.write(f'{v}\n')
+            elif field_type == 'vector':
+                f.write(f'internalField   nonuniform List<vector>\n{n_cells}\n(\n')
+                for row in data:
+                    f.write(f'({row[0]} {row[1]} {row[2]})\n')
+            elif field_type == 'symmTensor':
+                f.write(f'internalField   nonuniform List<symmTensor>\n{n_cells}\n(\n')
+                for row in data:
+                    f.write(f'({row[0]} {row[1]} {row[2]} {row[3]} {row[4]} {row[5]})\n')
+
+            f.write(');\n\n')
+            f.write('boundaryField\n{\n')
+
+            if boundaries is not None:
+                for patch_name in boundaries.keys():
+                    f.write(f'\t{patch_name}\n\t{{\n\t\ttype\t\t\tzeroGradient;\n\t}}\n')
+
+            f.write('}\n\n')
+            f.write('// ************************************************************************* //')
+
+    # create empty case.foam so PyVista/paraview can open it
+    open(os.path.join(path_output, 'case.foam'), 'w').close()
+    print(f"OpenFOAM case written to: {path_output}, time: {time_value}")

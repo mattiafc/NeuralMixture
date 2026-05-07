@@ -6,15 +6,15 @@ import pyvista           as pv
 import numpy             as np
 import matplotlib.pyplot as plt
 
-from scipy.spatial.distance import cdist
-from scipy.spatial          import cKDTree
-from scipy.interpolate      import griddata
-from scipy.optimize         import minimize_scalar
-from scipy.interpolate      import splprep, splev,Rbf,RBFInterpolator
+from scipy.spatial     import cKDTree
+from scipy.interpolate import griddata
+from scipy.optimize    import minimize_scalar
+from scipy.interpolate import RBFInterpolator
 
 from sklearn.model_selection import cross_val_score
 from sklearn.ensemble        import RandomForestRegressor
 from sklearn.metrics         import mean_absolute_error
+
 from utils_OpenFOAM          import *
 
 def create_dic_data(home_directory, cases) :
@@ -33,7 +33,7 @@ def create_dic_data(home_directory, cases) :
         dic_data.update({case:{}})
 
         for model in cases[case]["models"].keys():
-            path = os.path.join(home_directory, case, model)
+            path = os.path.join(home_directory, cases[case]["sub_directory"], model)
             internalMesh, boundaries = load_OpenFOAM_data(path)
             dic_data[case].update({model:{"internalMesh":internalMesh, "boundary": boundaries, "nCells":len(internalMesh.cell_centers().points)}})
     
@@ -403,127 +403,7 @@ def plot_weights_exact_predicted(path_save, C_coords, domain_bounds, weights_exa
     # plt.show()
     plt.close()
 
-def postprocess_jet(FeaturesChoice, dic_data, models, RANS_case="Jet_NearSonic"):
-    # copy_case(originalDir, newDir)
-    interpolate_RANS_on_HF(FeaturesChoice, dic_data, models, RANS_case)
-    export_Jet_foam_files(FeaturesChoice, models, dic_data, RANS_case, 'projected', 5000)
-    restrict_Jet_data_to_upper_half_PIV_domain_bounds(FeaturesChoice, dic_data, models, RANS_case)
-    export_Jet_foam_files(FeaturesChoice, models, dic_data, RANS_case, 'restricted', 5000)
-    augment_Jet_data_to_upper_half_PIV_domain_bounds(FeaturesChoice, dic_data, models, RANS_case)
-    return
-
-
-
-    # target_nPoints = PIV_cell_centers.shape[0]
-
-    # for QoI in dic_data[RANS_case][model]["internalMesh"].array_names:
-
-    #     # print(f'working on QoI: {QoI} with shape {dic_data[RANS_case]["CHAN"]["internalMesh"][QoI].shape}')
-    #     QoI_original_mesh = dic_data[RANS_case][model]["internalMesh"][QoI]
-        
-    #     if len(QoI_original_mesh.shape) == 1:
-    #         QoI_original_mesh = QoI_original_mesh.reshape(-1, 1)
-    #         idx_flip = 0
-
-    #     elif QoI_original_mesh.shape[1] == 3:
-    #         idx_flip = -1
-            
-    #     elif QoI_original_mesh.shape[1] == 6:
-    #         idx_flip = [2,4]
-
-    #     QoI_reflected = np.vstack((QoI_original_mesh, QoI_original_mesh))
-    #     nPoints, nComp = QoI_original_mesh.shape
-        
-    #     if QoI in ['eta8','Cz'] or nComp>1:
-    #         QoI_reflected[nPoints:, idx_flip] *= -1
-
-    #     dic_data[f"{RANS_case}_interpolated"][model]["internalMesh"][QoI] = np.zeros((target_nPoints, nComp))
-
-    #     idx = 0
-    #     print(f"Interpolating QoI {QoI} for model {model} on PIV mesh with {target_nPoints} points...")
-
-def mirror_symmetric_data(internalMesh):
-
-    QoIs_list = list(dict.fromkeys(internalMesh.array_names))
-    QoIs_indices = {}
-
-    cont = 0
-
-    for QoI in QoIs_list:
-
-        cont_old = copy.deepcopy(cont)
-        
-        QoI_original_mesh = internalMesh[QoI]
-        
-        if len(QoI_original_mesh.shape) == 1:
-            QoI_original_mesh = QoI_original_mesh.reshape(-1, 1)
-            idx_flip = 0
-
-        elif QoI_original_mesh.shape[1] == 3:
-            idx_flip = -1
-            
-        elif QoI_original_mesh.shape[1] == 6:
-            idx_flip = [2,4]
-
-        QoI_mirrored = np.vstack((QoI_original_mesh, QoI_original_mesh))
-        nPoints, nComp = QoI_original_mesh.shape
-        
-        if QoI in ['eta8','Cz'] or nComp>1:
-            QoI_mirrored[nPoints:, idx_flip] *= -1
-
-        if cont == 0:
-            QoI_mirrored_all = copy.deepcopy(QoI_mirrored)
-        else:        
-            QoI_mirrored_all = np.hstack((QoI_mirrored_all, QoI_mirrored))
-
-        cont += nComp
-
-        QoIs_indices[QoI] = [cont_old, cont]
-
-    return QoI_mirrored_all, copy.deepcopy(QoIs_indices)
     
-def interpolate_RANS_on_HF(FeaturesChoice, dic_data, model, RANS_case, Exact_case="Exact"):
-    ''' 
-    Post-treat jet case:\n 
-    scale * 0.0508 and rotate by 90° on x-axis
-    '''
-
-    # Transform the target mesh (PIV mesh) to match the RANS mesh orientation and scale
-    targetMesh = dic_data[RANS_case][Exact_case]["internalMesh"].rotate_x(90, inplace=False)
-    targetMesh.points *= 0.0508
-
-    dic_data[f"{RANS_case}_interpolated"] = {}
-    dic_data[f"{RANS_case}_interpolated"][model] = copy.deepcopy(dic_data[RANS_case][Exact_case])
-
-    target_mesh = targetMesh.cell_centers().points
-    source_half_mesh = dic_data[RANS_case][model]["internalMesh"].cell_centers().points
-
-    nPoints = source_half_mesh.shape[0]
-    source_mesh = np.vstack((source_half_mesh, source_half_mesh))
-    source_mesh[nPoints:, -1] *= -1
-
-    source_QoIs, QoI_indices = mirror_symmetric_data(dic_data[RANS_case][model]["internalMesh"])
-    target_QoIs = interpolate_rbf(source_mesh[:,0], source_mesh[:,2], source_QoIs, target_mesh[:,0], target_mesh[:,2], neighbors=240)
-
-    for QoI, idx in QoI_indices.items():
-        if idx[0] == idx[1]-1:
-            dic_data[f"{RANS_case}_interpolated"][model]["internalMesh"][QoI] = target_QoIs[:, idx[0]]
-        else:
-            dic_data[f"{RANS_case}_interpolated"][model]["internalMesh"][QoI] = target_QoIs[:, idx[0]:idx[1]]
-
-
-        # plt.tricontourf(source_mesh[:,0], source_mesh[:,2], toPlot, levels=100) 
- 
-def export_Jet_foam_files(FeaturesChoice, models, dic_data, RANS_case, whichDoamin, latest_time_value):
-    for model in models:
-        path_to_case = f'{FeaturesChoice}/{RANS_case}_{whichDoamin}/{model}'
-        if not os.path.exists(path_to_case):os.makedirs(path_to_case)
-        internalMesh_Jet = dic_data[f'{RANS_case}_{whichDoamin}'][model]['internalMesh']
-        boundaries_Jet = dic_data[f'{RANS_case}_{whichDoamin}'][model]['boundary']
-        
-        for fieldname in set(internalMesh_Jet.array_names):
-            write_OpenFOAM_with_boundaries(path_to_case, fieldname, fieldname, latest_time_value, internalMesh_Jet, boundaries_Jet)
-
 
 
 

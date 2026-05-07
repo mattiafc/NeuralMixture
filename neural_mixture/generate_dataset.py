@@ -18,6 +18,80 @@ from sklearn.model_selection import train_test_split
 from utils_ML               import *
 from utils_OpenFOAM         import *
 
+def mirror_symmetric_data(internalMesh):
+
+    QoIs_list = list(dict.fromkeys(internalMesh.array_names))
+    QoIs_indices = {}
+
+    cont = 0
+
+    for QoI in QoIs_list:
+
+        cont_old = copy.deepcopy(cont)
+        
+        QoI_original_mesh = internalMesh[QoI]
+        
+        if len(QoI_original_mesh.shape) == 1:
+            QoI_original_mesh = QoI_original_mesh.reshape(-1, 1)
+            idx_flip = 0
+            idx_reorder = [0]
+
+        elif QoI_original_mesh.shape[1] == 3:
+            idx_flip = -1
+            idx_reorder = [0,2,1]
+            
+        elif QoI_original_mesh.shape[1] == 6:
+            idx_flip = [2,4]
+            idx_reorder = [0,2,1,5,4,3]
+
+        QoI_mirrored = np.vstack((QoI_original_mesh, QoI_original_mesh))
+        nPoints, nComp = QoI_original_mesh.shape
+        
+        if QoI in ['eta8','Cz'] or nComp>1:
+            QoI_mirrored[nPoints:, idx_flip] *= -1
+
+        if cont == 0:
+            QoI_mirrored_all = copy.deepcopy(QoI_mirrored[:,idx_reorder])
+        else:        
+            QoI_mirrored_all = np.hstack((QoI_mirrored_all, QoI_mirrored[:,idx_reorder]))
+
+        cont += nComp
+
+        QoIs_indices[QoI] = [cont_old, cont]
+
+    return QoI_mirrored_all, copy.deepcopy(QoIs_indices)
+    
+def interpolate_RANS_on_HF(home_directory, dic_data, model, RANS_case, Exact_case="Exact"):
+    ''' 
+    Post-treat jet case:\n 
+    scale * 0.0508 and rotate by 90° on x-axis
+    '''
+
+    # Transform the target mesh (PIV mesh) to match the RANS mesh orientation and scale
+    targetMesh = dic_data[RANS_case][Exact_case]["internalMesh"].rotate_x(90, inplace=False)
+    targetMesh.points *= 0.0508
+
+    dic_data[f"{RANS_case}_interpolated"] = {}
+    dic_data[f"{RANS_case}_interpolated"][model] = copy.deepcopy(dic_data[RANS_case][Exact_case])
+
+    target_mesh = targetMesh.cell_centers().points
+    source_half_mesh = dic_data[RANS_case][model]["internalMesh"].cell_centers().points
+
+    nPoints = source_half_mesh.shape[0]
+    source_mesh = np.vstack((source_half_mesh, source_half_mesh))
+    source_mesh[nPoints:, -1] *= -1
+
+    source_QoIs, QoI_indices = mirror_symmetric_data(dic_data[RANS_case][model]["internalMesh"])
+    target_QoIs = interpolate_rbf(source_mesh[:,0], source_mesh[:,2], source_QoIs, target_mesh[:,0], target_mesh[:,2], neighbors=240)
+
+    for QoI, idx in QoI_indices.items():
+        if idx[0] == idx[1]-1:
+            dic_data[f"{RANS_case}_interpolated"][model]["internalMesh"][QoI] = target_QoIs[:, idx[0]]
+        else:
+            dic_data[f"{RANS_case}_interpolated"][model]["internalMesh"][QoI] = target_QoIs[:, idx[0]:idx[1]]
+
+    return dic_data
+
 def main():
     
     ap = argparse.ArgumentParser(
@@ -41,25 +115,34 @@ def main():
     dict_data = create_dic_data(home_directory, cases_dict)
 
     for case in cases_dict.keys():
-        if cases_dict[case].get("jet", False):
+        if cases_dict[case].get("interpolate_to_floder", False):
 
             experts = cases_dict[case].get("models", {}).keys()
 
-            interpolate_RANS_on_HF(home_directory, dict_data, "CHAN", RANS_case="Jet_NearSonic")
-            
-            # export_Jet_foam_files(home_directory, experts, dict_data, 'Jet_NearSonic', 'projected', 5000)
-            # restrict_Jet_data_to_upper_half_PIV_domain_bounds(home_directory, dict_data, experts, RANS_case="Jet_NearSonic")
-            # export_Jet_foam_files(home_directory, experts, dict_data, 'Jet_NearSonic', 'restricted', 5000)
-            # augment_Jet_data_to_upper_half_PIV_domain_bounds(home_directory, dict_data, experts, RANS_case="Jet_NearSonic")
-            
-        query_cases = [key for key in dict_data.keys() if not(key in ["Jet_NearSonic","Jet_NearSonic_restricted","Jet_NearSonic_augmented"])]
+            for model in experts:
+                target_path = os.path.join(home_directory, cases_dict[case]["interpolate_to_floder"], model)
+                
+                if not(model == setup_dict["HF_name"]):
+                    interpolate_RANS_on_HF(home_directory, dict_data, model, case, setup_dict['HF_name'])
+
+                    generate_FOAM_case_from_pyvista(os.path.join(home_directory, cases_dict[case]["interpolate_to_floder"], model),
+                                            dict_data[f"{case}_interpolated"][model]["internalMesh"], 
+                                            dict_data[f"{case}_interpolated"][model]["boundary"], 
+                                            os.path.join(home_directory, cases_dict[case]["sub_directory"], setup_dict['HF_name'], 'constant/polyMesh'),
+                                            time_value=5000)
+            else:
+                os.system(f'cp -r {os.path.join(home_directory, cases_dict[case]["sub_directory"], setup_dict["HF_name"])} \
+                          {os.path.join(home_directory, cases_dict[case]["interpolate_to_floder"], setup_dict["HF_name"])}')
+                
+            del dict_data[f"{case}"]
+
 
     weightsU_org, features = generate_labels_features(dict_data, setup_dict["features"])
 
-    weightsU = {key: weightsU_org[key] for key in query_cases if key in weightsU_org}
-    features = {key: features[key]['ANSJ'] for key in query_cases if key in features}
-    C_coords = {key: dict_data[key]['CHAN']['internalMesh'].cell_centers().points for key in query_cases}
-    domain_bounds = {key: dict_data[key]['CHAN']['internalMesh'].bounds for key in query_cases}
+    weightsU = {key: weightsU_org[key] for key in dict_data.keys()  if key in weightsU_org}
+    features = {key: features[key]['ANSJ'] for key in dict_data.keys() if key in features}
+    C_coords = {key: dict_data[key]['CHAN']['internalMesh'].cell_centers().points for key in dict_data.keys()}
+    domain_bounds = {key: dict_data[key]['CHAN']['internalMesh'].bounds for key in dict_data.keys()}
 
     print(weightsU["CD12600"].shape)
 
