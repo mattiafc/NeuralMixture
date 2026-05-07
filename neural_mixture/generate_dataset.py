@@ -109,6 +109,7 @@ def main():
 
     home_directory = setup_dict["simulation_home"]
     cases_dict = setup_dict["cases"]
+    bsl_model = setup_dict["baseline_model"]
 
     # print ("post-process jet data, this will change the dic and add new Jet_proj")
     dict_data = create_dic_data(home_directory, cases_dict)
@@ -119,49 +120,58 @@ def main():
             experts = cases_dict[case].get("models", {}).keys()
 
             dict_data[f"{case}_interpolated"] = {}
+            target_dir = os.path.join(home_directory, cases_dict[case]["interpolate_to_floder"])
+            os.system(f'rm -rf {target_dir}')
+            os.mkdir(target_dir)
 
             for model in experts:
                 dict_data[f"{case}_interpolated"][model] = {}
                 dict_data[f"{case}_interpolated"][model] = interpolate_RANS_on_HF(home_directory, dict_data, model, case, setup_dict['HF_name'])[f"{case}_interpolated"][model]
 
                 if not(model == setup_dict["HF_name"]):
-                    generate_FOAM_case_from_pyvista(os.path.join(home_directory, cases_dict[case]["interpolate_to_floder"], model),
+                    generate_FOAM_case_from_pyvista(os.path.join(target_dir, model),
                                             dict_data[f"{case}_interpolated"][model]["internalMesh"], 
                                             dict_data[f"{case}_interpolated"][model]["boundary"], 
                                             os.path.join(home_directory, cases_dict[case]["sub_directory"], setup_dict['HF_name'], 'constant/polyMesh'),
                                             time_value=5000)
                 else:
+                    
                     os.system(f'cp -r {os.path.join(home_directory, cases_dict[case]["sub_directory"], setup_dict["HF_name"])} \
-                          {os.path.join(home_directory, cases_dict[case]["interpolate_to_floder"], setup_dict["HF_name"])}')
+                          {os.path.join(target_dir, setup_dict["HF_name"])}')
                 
             del dict_data[f"{case}"]
 
 
-    weightsU_org, features = generate_labels_features(dict_data, setup_dict["features"])
+    weightsU_org, features = generate_labels_features(dict_data, setup_dict["features"], setup_dict["models_order"])
 
     weightsU = {key: weightsU_org[key] for key in dict_data.keys()  if key in weightsU_org}
-    features = {key: features[key]['ANSJ'] for key in dict_data.keys() if key in features}
+    features = {key: features[key]['CHAN'] for key in dict_data.keys() if key in features}
     C_coords = {key: dict_data[key]['CHAN']['internalMesh'].cell_centers().points for key in dict_data.keys()}
     domain_bounds = {key: dict_data[key]['CHAN']['internalMesh'].bounds for key in dict_data.keys()}
 
     print(weightsU["CD12600"].shape)
 
     print("Weights calculated, now exporting the data in OpenFOAM format")
-    for case in dict_data.keys():
+    for case in cases_dict.keys():
         print(case)
-        if case == "Jet_NearSonic": case_export = "Jet_NearSonic_restricted"
-        else: case_export = case
+        if cases_dict[case].get("interpolate_to_floder", False):
+            case_folder = cases_dict[case]["interpolate_to_floder"]
+            case_export = f"{case}_interpolated"
+        else:
+            case_folder = case
+            case_export = case
+
         time_folder = "5000"
-        # export_folder = f"./{FeaturesChoice}/{case}/ExactWeights/{WhichWeights}"
-        export_folder = os.path.join(home_directory, case, "Exact")
+        
+        export_folder = os.path.join(home_directory, case_folder, "Exact")
         simul_folder = os.path.join(export_folder,time_folder)
         boundary_data, nCells = read_boundary_data(os.path.join(export_folder,"constant/polyMesh"))
-        
-        #### RIMUOVERE DOMANI ####
-        weights = ["ANSJ", "CHAN", "SEP"]
 
         for i_ in range(3):
-            write_scalar_field(simul_folder, time_folder, f"w_{weights[i_]}_exact", weightsU_org[case_export][:,i_], boundary_data)
+            write_scalar_field(simul_folder, time_folder, f"w_{setup_dict["models_order"][i_]}_exact", weightsU_org[case_export][:,i_], boundary_data)
+
+    ML_dataset = pd.DataFrame()
+
 
 
 # # #### Perform the train-valid split

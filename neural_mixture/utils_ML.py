@@ -41,7 +41,7 @@ def create_dic_data(home_directory, cases) :
             
     return dic_data
 
-def generate_labels_features(dic_data, feature_names):
+def generate_labels_features(dic_data, feature_names, model_order):
 
     print(f"=============================================================================")
 
@@ -57,8 +57,13 @@ def generate_labels_features(dic_data, feature_names):
         weightsU_case = []
         list_U_models= []
 
+        idx = 0;
         for model in dic_data[case]:
             if model != 'Exact':
+
+                assert(model == model_order[idx])
+                idx+=1
+
                 U_model = dic_data[case][model]['internalMesh']['U'][:,0:2]#.reshape((-1,1)) # changed rebecca
                 list_U_models.append(U_model)
 
