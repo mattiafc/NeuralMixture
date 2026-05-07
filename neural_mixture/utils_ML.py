@@ -293,7 +293,7 @@ def plot_histograms_training_test_MLmodel(path_save,
 
 
 def interpolate_rbf(x_src, y_src, values, x_tgt, y_tgt,
-                    kernel='thin_plate_spline', neighbors=64):
+                    kernel='thin_plate_spline', neighbors=None):
     """
     Interpolate field(s) from source to target mesh using local RBF.
 
@@ -405,58 +405,55 @@ def plot_weights_exact_predicted(path_save, C_coords, domain_bounds, weights_exa
 
 def postprocess_jet(FeaturesChoice, dic_data, models, RANS_case="Jet_NearSonic"):
     # copy_case(originalDir, newDir)
-    make_symm_Jet_data_on_PIVsubdomain(FeaturesChoice, dic_data, models, RANS_case)
+    interpolate_RANS_on_HF(FeaturesChoice, dic_data, models, RANS_case)
     export_Jet_foam_files(FeaturesChoice, models, dic_data, RANS_case, 'projected', 5000)
     restrict_Jet_data_to_upper_half_PIV_domain_bounds(FeaturesChoice, dic_data, models, RANS_case)
     export_Jet_foam_files(FeaturesChoice, models, dic_data, RANS_case, 'restricted', 5000)
     augment_Jet_data_to_upper_half_PIV_domain_bounds(FeaturesChoice, dic_data, models, RANS_case)
     return
 
-    
-def make_symm_Jet_data_on_PIVsubdomain(FeaturesChoice, dic_data, model, RANS_case, Exact_case="Exact"):
-    ''' 
-    Post-treat jet case:\n 
-    scale * 0.0508 and rotate by 90° on x-axis
-    '''
 
-    full_domain_mesh = dic_data[RANS_case][model]["internalMesh"]
-    PIVMesh = dic_data[RANS_case][Exact_case]["internalMesh"].rotate_x(90, inplace=False)
-    PIVMesh.points *= 0.0508
-    
-    print(f' dic_data.keys(): {dic_data.keys()}')
-    print(f' dic_data[{RANS_case}].keys(): {dic_data[RANS_case].keys()}')
-    print(f' dic_data[{RANS_case}][{model}].keys(): {dic_data[RANS_case][model].keys()}')
-    print(f' dic_data[{RANS_case}][{model}]["internalMesh"].array_names: {dic_data[RANS_case][model]["internalMesh"].array_names}')
 
-    dic_data[f"{RANS_case}_interpolated"] = {}
-    dic_data[f"{RANS_case}_interpolated"][model] = copy.deepcopy(dic_data[RANS_case][Exact_case])
+    # target_nPoints = PIV_cell_centers.shape[0]
 
-    PIV_cell_centers = PIVMesh.cell_centers().points
-    source_half_mesh = full_domain_mesh.cell_centers().points
+    # for QoI in dic_data[RANS_case][model]["internalMesh"].array_names:
 
-    nPoints = source_half_mesh.shape[0]
-    source_mesh = np.vstack((source_half_mesh, source_half_mesh))
-    source_mesh[nPoints:, -1] *= -1
+    #     # print(f'working on QoI: {QoI} with shape {dic_data[RANS_case]["CHAN"]["internalMesh"][QoI].shape}')
+    #     QoI_original_mesh = dic_data[RANS_case][model]["internalMesh"][QoI]
+        
+    #     if len(QoI_original_mesh.shape) == 1:
+    #         QoI_original_mesh = QoI_original_mesh.reshape(-1, 1)
+    #         idx_flip = 0
 
-    target_nPoints = PIV_cell_centers.shape[0]
+    #     elif QoI_original_mesh.shape[1] == 3:
+    #         idx_flip = -1
+            
+    #     elif QoI_original_mesh.shape[1] == 6:
+    #         idx_flip = [2,4]
 
-    # 2. Ordiniamo gli indici (np.unique restituisce indici in ordine di valore, 
-    # non di apparizione; ordinarli non è obbligatorio ma consigliato)
-    _, unique_indices = np.unique(np.round(source_mesh, decimals=5), axis=0, return_index=True)
-    unique_indices = np.sort(unique_indices)
-    print(len(unique_indices))
-    input()
+    #     QoI_reflected = np.vstack((QoI_original_mesh, QoI_original_mesh))
+    #     nPoints, nComp = QoI_original_mesh.shape
+        
+    #     if QoI in ['eta8','Cz'] or nComp>1:
+    #         QoI_reflected[nPoints:, idx_flip] *= -1
 
-    # 3. Filtra i punti e tutte le variabili usando gli stessi indici
-    source_mesh = source_mesh[unique_indices]           # (N_unique, 3)
-    # var_n1_clean = var_n1[unique_indices]     # (N_unique, 1)
-    # var_n3_clean = var_n3[unique_indices]     # (N_unique, 3)
-    # var_n6_clean = var_n6[unique_indices]     # (N_unique, 6)
+    #     dic_data[f"{RANS_case}_interpolated"][model]["internalMesh"][QoI] = np.zeros((target_nPoints, nComp))
 
-    for QoI in dic_data[RANS_case][model]["internalMesh"].array_names:
+    #     idx = 0
+    #     print(f"Interpolating QoI {QoI} for model {model} on PIV mesh with {target_nPoints} points...")
 
-        # print(f'working on QoI: {QoI} with shape {dic_data[RANS_case]["CHAN"]["internalMesh"][QoI].shape}')
-        QoI_original_mesh = dic_data[RANS_case][model]["internalMesh"][QoI]
+def mirror_symmetric_data(internalMesh):
+
+    QoIs_list = list(dict.fromkeys(internalMesh.array_names))
+    QoIs_indices = {}
+
+    cont = 0
+
+    for QoI in QoIs_list:
+
+        cont_old = copy.deepcopy(cont)
+        
+        QoI_original_mesh = internalMesh[QoI]
         
         if len(QoI_original_mesh.shape) == 1:
             QoI_original_mesh = QoI_original_mesh.reshape(-1, 1)
@@ -468,100 +465,55 @@ def make_symm_Jet_data_on_PIVsubdomain(FeaturesChoice, dic_data, model, RANS_cas
         elif QoI_original_mesh.shape[1] == 6:
             idx_flip = [2,4]
 
-        QoI_reflected = np.vstack((QoI_original_mesh, QoI_original_mesh))
+        QoI_mirrored = np.vstack((QoI_original_mesh, QoI_original_mesh))
         nPoints, nComp = QoI_original_mesh.shape
         
         if QoI in ['eta8','Cz'] or nComp>1:
-            QoI_reflected[nPoints:, idx_flip] *= -1
+            QoI_mirrored[nPoints:, idx_flip] *= -1
 
-        QoI_reflected = QoI_reflected[unique_indices]     # (N_unique, nComp)
+        if cont == 0:
+            QoI_mirrored_all = copy.deepcopy(QoI_mirrored)
+        else:        
+            QoI_mirrored_all = np.hstack((QoI_mirrored_all, QoI_mirrored))
 
-        # toPlot = QoI_reflected
-        # #Flip the scalars
-        # if QoI in ['eta_8','Cz']: 
-        #     toPlot = QoI_reflected
-        # if nComp == 3: 
-        #     toPlot = QoI_reflected[:,-1]
-        # if nComp == 6:
-        #     toPlot = QoI_reflected[:,2]
+        cont += nComp
 
-        # print(source_mesh.shape, QoI_reflected.shape)
-        # plt.figure()
-        # plt.tricontourf(source_mesh[:,0], source_mesh[:,2], toPlot, levels=100)
-        # plt.colorbar()
-        # plt.show()
-        
-        dic_data[f"{RANS_case}_interpolated"][model]["internalMesh"][QoI] = np.zeros((target_nPoints, nComp))
+        QoIs_indices[QoI] = [cont_old, cont]
 
-        idx = 0
-        for comp in QoI_reflected.T:
-            print(f'Shapes are: {source_mesh[:,0].shape}, {source_mesh[:,2].shape}, {comp.shape}, {PIV_cell_centers[:,0].shape}, {PIV_cell_centers[:,2].shape}')
-            dic_data[f"{RANS_case}_interpolated"][model]["internalMesh"][QoI][:, idx] = interpolate_rbf(
-                source_mesh[:,0], source_mesh[:,2], comp, PIV_cell_centers[:,0], PIV_cell_centers[:,2])
-            idx += 1
-            print('First interp')
-
-    # interpolate_rbf(source_mesh[:,0], source_mesh[:,2], toPlot, PIV_cell_centers[:,0], PIV_cell_centers[:,2])
-
-
-    # print(f"Number of cells in PIV mesh: {PIV_cell_centers.shape}, Number of cells in RANS mesh: {RANS_cell_centers.shape}")
-    # plt.figure()
-    # plt.scatter(PIV_cell_centers[:,0], PIV_cell_centers[:,2], s=5, label='PIV mesh')
-    # plt.scatter(source_mesh[:,0], source_mesh[:,2], s=10, color = 'tab:orange', marker = 'o', facecolor='none', label='RANS mesh')
-    # plt.show()
-    # input()
-    # #indices of points 0 ymax
-    # bounds = internalMeshRestricted.bounds
-    # ymin, ymax = bounds[2], bounds[3]
-      
-    # # cell centers within the bounds (y_min + y_max)/2. and y_max
-    # cell_centers = internalMeshRestricted.cell_centers().points
-    # indices_upper_half = np.where((cell_centers[:, 1] >= (ymin + ymax)/2.) & (cell_centers[:, 1] <= ymax))[0]
-    # Upper_HalfRestricted_cell_centers = cell_centers[indices_upper_half,:]
+    return QoI_mirrored_all, copy.deepcopy(QoIs_indices)
     
-    # indices_lower_half = np.where((cell_centers[:, 1] <= (ymin + ymax)/2.) & (cell_centers[:, 1] >= ymin))[0]
-    # Lower_HalfRestricted_cell_centers = cell_centers[indices_lower_half,:]
-    # #
-    # dic_data.update({f"{RANS_case}_projected":{}})
-    # #
-    # for model in models:
-     
-    #     mesh_Jet=dic_data[RANS_case][model]["internalMesh"].rotate_x(-90, inplace=False)
-    #     mesh_Jet.points *= 1./0.0508
+def interpolate_RANS_on_HF(FeaturesChoice, dic_data, model, RANS_case, Exact_case="Exact"):
+    ''' 
+    Post-treat jet case:\n 
+    scale * 0.0508 and rotate by 90° on x-axis
+    '''
 
-    #     internalMesh = mesh_Jet
-    #     # boundaries = dic_data[RANS_case][model]["boundary"] #M
-    #     cell_centers_Mesh = internalMesh.cell_centers().points
-        
-        
-    #     distances = cdist(Upper_HalfRestricted_cell_centers, cell_centers_Mesh)
+    # Transform the target mesh (PIV mesh) to match the RANS mesh orientation and scale
+    targetMesh = dic_data[RANS_case][Exact_case]["internalMesh"].rotate_x(90, inplace=False)
+    targetMesh.points *= 0.0508
 
-    #     if model=='Exact' :
-    #         upper_nearest_indices = indices_upper_half
-    #     else : 
-    #         upper_nearest_indices = np.argmin(distances, axis=1)
-        
-        
-    #     mesh_Jet = mesh_Jet.rotate_x(-180, inplace=False)
-    #     internalMesh = mesh_Jet
-    #     cell_centers_Mesh = internalMesh.cell_centers().points
-        
-    #     distances = cdist(Lower_HalfRestricted_cell_centers, cell_centers_Mesh)
-    #     if model=='Exact' :
-    #         lower_nearest_indices = indices_lower_half
-    #     else :
-    #         lower_nearest_indices = np.argmin(distances, axis=1)
-        
-    #     # load new restricted mesh
-    #     internalMesh_new, boundaries_new = load_OpenFOAM_data(f'{FeaturesChoice}/{RANS_case}/Exact')
-        
-    #     for key in set(internalMesh_new.array_names) :
-    #         internalMesh_new[key] *= 0.
-    #         internalMesh_new[key][indices_upper_half,] = internalMesh[key][upper_nearest_indices,]
-    #         internalMesh_new[key][indices_lower_half,] = internalMesh[key][lower_nearest_indices,]
-        
-    #     dic_data[f'{RANS_case}_projected'].update({model:{"internalMesh":internalMesh_new, "boundary": boundaries_new, "nCells":len(internalMesh_new.cell_centers().points)}})
-        
+    dic_data[f"{RANS_case}_interpolated"] = {}
+    dic_data[f"{RANS_case}_interpolated"][model] = copy.deepcopy(dic_data[RANS_case][Exact_case])
+
+    target_mesh = targetMesh.cell_centers().points
+    source_half_mesh = dic_data[RANS_case][model]["internalMesh"].cell_centers().points
+
+    nPoints = source_half_mesh.shape[0]
+    source_mesh = np.vstack((source_half_mesh, source_half_mesh))
+    source_mesh[nPoints:, -1] *= -1
+
+    source_QoIs, QoI_indices = mirror_symmetric_data(dic_data[RANS_case][model]["internalMesh"])
+    target_QoIs = interpolate_rbf(source_mesh[:,0], source_mesh[:,2], source_QoIs, target_mesh[:,0], target_mesh[:,2], neighbors=240)
+
+    for QoI, idx in QoI_indices.items():
+        if idx[0] == idx[1]-1:
+            dic_data[f"{RANS_case}_interpolated"][model]["internalMesh"][QoI] = target_QoIs[:, idx[0]]
+        else:
+            dic_data[f"{RANS_case}_interpolated"][model]["internalMesh"][QoI] = target_QoIs[:, idx[0]:idx[1]]
+
+
+        # plt.tricontourf(source_mesh[:,0], source_mesh[:,2], toPlot, levels=100) 
+ 
 def export_Jet_foam_files(FeaturesChoice, models, dic_data, RANS_case, whichDoamin, latest_time_value):
     for model in models:
         path_to_case = f'{FeaturesChoice}/{RANS_case}_{whichDoamin}/{model}'
@@ -571,98 +523,6 @@ def export_Jet_foam_files(FeaturesChoice, models, dic_data, RANS_case, whichDoam
         
         for fieldname in set(internalMesh_Jet.array_names):
             write_OpenFOAM_with_boundaries(path_to_case, fieldname, fieldname, latest_time_value, internalMesh_Jet, boundaries_Jet)
-
-def restrict_Jet_data_to_upper_half_PIV_domain_bounds(FeaturesChoices, dic_data, models, RANS_case):
-
-    PIVmesh = dic_data[RANS_case]["Exact"]["internalMesh"].rotate_x(90, inplace=False)
-    PIVmesh.points *= 0.0508
-    #indices of points 0 zmax
-    bounds = PIVmesh.bounds
-    xmin, xmax, _, _, zmin, zmax = bounds
-
-    cell_centers_PIV = PIVmesh.cell_centers().points
-    # indices_upper_half = np.where((cell_centers_PIV[:, 2] >= (zmin + zmax)/2.) & (cell_centers_PIV[:, 2] <= zmax))[0]
-    
-    internalMesh_ref = dic_data[RANS_case]['CHAN']["internalMesh"]
-    cell_centers_Mesh_ref = internalMesh_ref.cell_centers().points
-    indices_upper_half_phisical = np.where((cell_centers_Mesh_ref[:, 2] >= (zmin + zmax)/2.) & (cell_centers_Mesh_ref[:, 2] <= zmax) & (cell_centers_Mesh_ref[:, 0] >= xmin) & (cell_centers_Mesh_ref[:, 0] <= xmax))[0]
-    HalfRestricted_cell_centers_ref = cell_centers_Mesh_ref[indices_upper_half_phisical,:]
-    
-    dic_data.update({f"{RANS_case}_restricted":{}})
-    
-    for model in models:
-        
-        internalMesh = dic_data[RANS_case][model]["internalMesh"]
-        internalMesh_new, boundaries_new = load_OpenFOAM_data(f'{FeaturesChoices}/{RANS_case}/CHAN')
-        
-        if model=='Exact' : 			
-            distances = cdist(HalfRestricted_cell_centers_ref, cell_centers_PIV)
-            nearest_indices_model = np.argmin(distances, axis=1)
-        else : 
-            nearest_indices_model = indices_upper_half_phisical
-
-        for key in set(internalMesh_new.array_names) :
-            internalMesh_new[key] *= 0.
-            internalMesh_new[key][indices_upper_half_phisical,] = internalMesh[key][nearest_indices_model,]
-        
-        
-        dic_data[f'{RANS_case}_restricted'].update({model:{"internalMesh":internalMesh_new, "boundary": boundaries_new, "nCells":len(internalMesh_new.cell_centers().points)}})
-
-def augment_Jet_data_to_upper_half_PIV_domain_bounds(FeaturesChoices, dic_data, models, RANS_case):
-
-    PIVmesh = dic_data[RANS_case]["Exact"]["internalMesh"].rotate_x(90, inplace=False)
-    PIVmesh.points *= 0.0508
-    #indices of points 0 zmax
-    bounds = PIVmesh.bounds
-    xmin, xmax, _, _, zmin, zmax = bounds
-
-    cell_centers_PIV = PIVmesh.cell_centers().points
-    indices_upper_half = np.where((cell_centers_PIV[:, 2] >= (zmin + zmax)/2.) & (cell_centers_PIV[:, 2] <= zmax))[0]
-     
-    internalMesh_ref = dic_data[RANS_case]['CHAN']["internalMesh"]
-     
-    cell_centers_Mesh_ref = internalMesh_ref.cell_centers().points
-    indices_upper_half_phisical = np.where((cell_centers_Mesh_ref[:, 2] >= (zmin + zmax)/2.) & (cell_centers_Mesh_ref[:, 2] <= zmax) & (cell_centers_Mesh_ref[:, 0] >= xmin) & (cell_centers_Mesh_ref[:, 0] <= xmax))[0]
-    HalfRestricted_cell_centers_ref = cell_centers_Mesh_ref[indices_upper_half_phisical,:]
-     
-    dic_data.update({f"{RANS_case}_augmented":{}})
-     
-    for model in models:
-        
-        internalMesh = dic_data[RANS_case][model]["internalMesh"]
-          
-        
-        # load new restricted mesh (ANSJ in particular and fill it with
-        if model=='Exact' : 
-            distances = cdist(HalfRestricted_cell_centers_ref, cell_centers_PIV)
-            nearest_indices_model = np.argmin(distances, axis=1)
-                 
-            internalMesh_new, boundaries_new = load_OpenFOAM_data(f'{FeaturesChoices}/{RANS_case}/ANSJ')
-               
-        else :
-            nearest_indices_model = indices_upper_half_phisical
-            internalMesh_new, boundaries_new = load_OpenFOAM_data(f'{FeaturesChoices}/{RANS_case}/{model}')
-            if model !='ANSJ':
-                for key in ['U', 'bijDelta', 'ReskOmega'] :
-                    internalMesh_new[key][:,] = 1e8
-        
-        
-        for key in set(internalMesh_new.array_names) :
-            internalMesh_new[key][indices_upper_half_phisical,] = internalMesh[key][nearest_indices_model,]
-            
-        dic_data[f'{RANS_case}_augmented'].update({model:{"internalMesh":internalMesh_new, "boundary": boundaries_new, "nCells":len(internalMesh_new.cell_centers().points)}})
-        
-
-
-
-
-
-
-
-
-
-
-
 
 
 

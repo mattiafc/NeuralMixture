@@ -201,7 +201,7 @@ def load_OpenFOAM_data(path):
 def write_OpenFOAM_with_boundaries(path_to_case, input_file, output_file, time_value, internalMesh, boundaries):
 
     # Read content of the original file
-    with open(f"{path_to_case}/{time_value}/{input_file}", 'r') as fin:
+    with open(os.path.join(path_to_case, time_value, input_file), 'r') as fin:
         content = fin.readlines()
     
     patches = boundaries.keys()

@@ -45,7 +45,8 @@ def main():
 
             experts = cases_dict[case].get("models", {}).keys()
 
-            make_symm_Jet_data_on_PIVsubdomain(home_directory, dict_data, "CHAN", RANS_case="Jet_NearSonic")
+            interpolate_RANS_on_HF(home_directory, dict_data, "CHAN", RANS_case="Jet_NearSonic")
+            
             # export_Jet_foam_files(home_directory, experts, dict_data, 'Jet_NearSonic', 'projected', 5000)
             # restrict_Jet_data_to_upper_half_PIV_domain_bounds(home_directory, dict_data, experts, RANS_case="Jet_NearSonic")
             # export_Jet_foam_files(home_directory, experts, dict_data, 'Jet_NearSonic', 'restricted', 5000)
