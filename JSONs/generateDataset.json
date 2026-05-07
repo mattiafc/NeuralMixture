@@ -1,0 +1,43 @@
+{
+    "simulation_home": "/home/mciarlatani/DataDrivenML/DatabaseMattia",
+    "output_directory": "/home/mciarlatani/DataDrivenML/MachineLearning",
+    "Features":["U","p","k","omega","eta_1","eta_2","eta_3","eta_4","eta_5","eta_6","eta_7","eta_8","eta_9","eta_10","eta_11"],
+
+    "pairing":
+    {
+        "ANSJ":["Jet_NearSonic_projected"],
+        "CHAN":["channel1000_2D"],
+        "SEP":["PH10595" , "CBFS13700", "CD12600"]
+    },
+
+    "channel1000_2D":
+    {
+        "sub_directory":"Channel",
+        "models":{"ANSJ":5000,"CHAN":"5000","SEP":"5000"}
+    },
+
+    "CBFS13700":
+    {
+        "sub_directory":"CurvedBackwardFacingStep",
+        "models":{"ANSJ":5000,"CHAN":"5000","SEP":"5000"}
+    },
+
+    "CD12600":
+    {
+        "sub_directory":"CurvedBackwardFacingStep",
+        "models":{"ANSJ":5000,"CHAN":"5000","SEP":"5000"}
+    },
+
+    "PH10595":
+    {
+        "sub_directory":"PeriodcHill",
+        "models":{"ANSJ":5000,"CHAN":"5000","SEP":"5000"}
+    },
+
+    "Jet_NearSonic":
+    {
+        "sub_directory":"AxisimmetricNearSonicJet",
+        "models":{"ANSJ":5000,"CHAN":"5000","SEP":"5000"},
+        "jet":true
+    }
+}

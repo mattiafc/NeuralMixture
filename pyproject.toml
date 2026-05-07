@@ -14,6 +14,10 @@ dependencies = [
     "pandas",
     "matplotlib",
     "scipy",
+    "pyvista",
+    "scikit-learn",
+    "torch",
+    "json"
 ]
 
 [tool.setuptools.packages.find]
@@ -22,3 +26,4 @@ include = ["neural_mixture*"]
 [project.scripts]
 postprocess_compressor = "neural_mixture.postprocess_compressor:main"
 setup_simulation = "neural_mixture.setup_simulation:main"
+generate_dataset = "neural_mixture.generate_dataset:main"
