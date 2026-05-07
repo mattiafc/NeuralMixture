@@ -61,7 +61,7 @@ def mirror_symmetric_data(internalMesh):
 
     return QoI_mirrored_all, copy.deepcopy(QoIs_indices)
     
-def interpolate_RANS_on_HF(home_directory, dic_data, model, RANS_case, Exact_case="Exact"):
+def interpolate_RANS_on_HF(home_directory, dic_data, expert_name, RANS_case, Exact_case="Exact"):
     ''' 
     Post-treat jet case:\n 
     scale * 0.0508 and rotate by 90° on x-axis
@@ -71,24 +71,23 @@ def interpolate_RANS_on_HF(home_directory, dic_data, model, RANS_case, Exact_cas
     targetMesh = dic_data[RANS_case][Exact_case]["internalMesh"].rotate_x(90, inplace=False)
     targetMesh.points *= 0.0508
 
-    dic_data[f"{RANS_case}_interpolated"] = {}
-    dic_data[f"{RANS_case}_interpolated"][model] = copy.deepcopy(dic_data[RANS_case][Exact_case])
+    dic_data[f"{RANS_case}_interpolated"][expert_name] = copy.deepcopy(dic_data[RANS_case][Exact_case])
 
     target_mesh = targetMesh.cell_centers().points
-    source_half_mesh = dic_data[RANS_case][model]["internalMesh"].cell_centers().points
+    source_half_mesh = dic_data[RANS_case][expert_name]["internalMesh"].cell_centers().points
 
     nPoints = source_half_mesh.shape[0]
     source_mesh = np.vstack((source_half_mesh, source_half_mesh))
     source_mesh[nPoints:, -1] *= -1
 
-    source_QoIs, QoI_indices = mirror_symmetric_data(dic_data[RANS_case][model]["internalMesh"])
+    source_QoIs, QoI_indices = mirror_symmetric_data(dic_data[RANS_case][expert_name]["internalMesh"])
     target_QoIs = interpolate_rbf(source_mesh[:,0], source_mesh[:,2], source_QoIs, target_mesh[:,0], target_mesh[:,2], neighbors=240)
 
     for QoI, idx in QoI_indices.items():
         if idx[0] == idx[1]-1:
-            dic_data[f"{RANS_case}_interpolated"][model]["internalMesh"][QoI] = target_QoIs[:, idx[0]]
+            dic_data[f"{RANS_case}_interpolated"][expert_name]["internalMesh"][QoI] = target_QoIs[:, idx[0]]
         else:
-            dic_data[f"{RANS_case}_interpolated"][model]["internalMesh"][QoI] = target_QoIs[:, idx[0]:idx[1]]
+            dic_data[f"{RANS_case}_interpolated"][expert_name]["internalMesh"][QoI] = target_QoIs[:, idx[0]:idx[1]]
 
     return dic_data
 
@@ -119,19 +118,20 @@ def main():
 
             experts = cases_dict[case].get("models", {}).keys()
 
-            for model in experts:
-                target_path = os.path.join(home_directory, cases_dict[case]["interpolate_to_floder"], model)
-                
-                if not(model == setup_dict["HF_name"]):
-                    interpolate_RANS_on_HF(home_directory, dict_data, model, case, setup_dict['HF_name'])
+            dict_data[f"{case}_interpolated"] = {}
 
+            for model in experts:
+                dict_data[f"{case}_interpolated"][model] = {}
+                dict_data[f"{case}_interpolated"][model] = interpolate_RANS_on_HF(home_directory, dict_data, model, case, setup_dict['HF_name'])[f"{case}_interpolated"][model]
+
+                if not(model == setup_dict["HF_name"]):
                     generate_FOAM_case_from_pyvista(os.path.join(home_directory, cases_dict[case]["interpolate_to_floder"], model),
                                             dict_data[f"{case}_interpolated"][model]["internalMesh"], 
                                             dict_data[f"{case}_interpolated"][model]["boundary"], 
                                             os.path.join(home_directory, cases_dict[case]["sub_directory"], setup_dict['HF_name'], 'constant/polyMesh'),
                                             time_value=5000)
-            else:
-                os.system(f'cp -r {os.path.join(home_directory, cases_dict[case]["sub_directory"], setup_dict["HF_name"])} \
+                else:
+                    os.system(f'cp -r {os.path.join(home_directory, cases_dict[case]["sub_directory"], setup_dict["HF_name"])} \
                           {os.path.join(home_directory, cases_dict[case]["interpolate_to_floder"], setup_dict["HF_name"])}')
                 
             del dict_data[f"{case}"]
@@ -146,7 +146,9 @@ def main():
 
     print(weightsU["CD12600"].shape)
 
+    print("Weights calculated, now exporting the data in OpenFOAM format")
     for case in dict_data.keys():
+        print(case)
         if case == "Jet_NearSonic": case_export = "Jet_NearSonic_restricted"
         else: case_export = case
         time_folder = "5000"

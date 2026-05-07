@@ -1,8 +1,7 @@
 {
     "simulation_home": "/home/mciarlatani/DataDrivenML/DatabaseMattia",
     "output_directory": "/home/mciarlatani/DataDrivenML/MachineLearning",
-    "Features":["U","p","k","omega"
-               ,"eta_1","eta_2","eta_3","eta_4","eta_5","eta_6","eta_7","eta_8","eta_9","eta_10","eta_11"],
+    "Features":["U","p","k","omega","eta_1","eta_2","eta_3","eta_4","eta_5","eta_6","eta_7","eta_8","eta_9","eta_10","eta_11"],
 
     "pairing":
     {

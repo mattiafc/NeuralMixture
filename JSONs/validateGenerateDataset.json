@@ -4,7 +4,7 @@
     "weights_name":"Mattia",
     "features":["eta_1","eta_2","eta_3","eta_4","eta_5","eta_6","eta_7","eta_8","eta_9","eta_10","eta_11"],
     "reference_model":"CHAN",
-    "HF_data_folder":"Exact",
+    "HF_name":"Exact",
 
     "cases":
     {
@@ -12,7 +12,7 @@
         {
             "sub_directory":"Jet_NearSonic",
             "models":{"Exact":"5000","ANSJ":"5000","CHAN":"5000","SEP":"5000"},
-            "jet":true
+            "interpolate_to_floder":"JetInterp"
         },
 
         "CD12600":

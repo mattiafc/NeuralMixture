@@ -52,30 +52,23 @@ def generate_labels_features(dic_data, feature_names):
 
         features.update({case : {}})
 
-        # condition set to take into account the projected data Jet_NearSonic_proj
-        if case != 'Jet_NearSonic'and case != 'Jet_subSonic': 
+        # internal mesh, getting the U,V components of the high fidelity solution
+        U_HF = dic_data[case]['Exact']['internalMesh']['U'][:,0:2]#.reshape((-1,1)) # changed rebecca
+        weightsU_case = []
+        list_U_models= []
 
-            # internal mesh, getting the U,V components of the high fidelity solution
-            U_HF = dic_data[case]['Exact']['internalMesh']['U'][:,0:2]#.reshape((-1,1)) # changed rebecca 
-            weightsU_case = []
-            list_U_models= []
-            
-            for model in dic_data[case]:
-                if model != 'Exact':
-                    U_model = dic_data[case][model]['internalMesh']['U'][:,0:2]#.reshape((-1,1)) # changed rebecca 
-                    
-                    # if case == "LRN_OGV_trans" or case == "LRN_OGV_trans_OP1":
-                    #     U_HF = (U_HF - U_HF.mean(axis=0))/ U_HF.std(axis=0)
-                    #     U_model = (U_model - U_model.mean(axis=0)) / U_model.std(axis=0)
-                    list_U_models.append(U_model)
-                    
-                    features[case].update({model : np.hstack([np.array(dic_data[case][model]['internalMesh'][feat]).reshape((-1,1)) for feat in feature_names]) }) 
+        for model in dic_data[case]:
+            if model != 'Exact':
+                U_model = dic_data[case][model]['internalMesh']['U'][:,0:2]#.reshape((-1,1)) # changed rebecca
+                list_U_models.append(U_model)
 
-            
-            weightsU_case, best_sigma = find_optimal_weights(U_HF, list_U_models)
-            weightsU.update({case : np.hstack([ np.array( w_ / sum(weightsU_case)).reshape((-1,1)) for w_ in weightsU_case]) })
+                features[case].update({model : np.hstack([np.array(dic_data[case][model]['internalMesh'][feat]).reshape((-1,1)) for feat in feature_names]) })
 
-            print(f"Computed weights for case {case}; best sigma is {best_sigma:.3f}")
+
+        weightsU_case, best_sigma = find_optimal_weights(U_HF, list_U_models)
+        weightsU.update({case : np.hstack([ np.array( w_ / sum(weightsU_case)).reshape((-1,1)) for w_ in weightsU_case]) })
+
+        print(f"Computed weights for case {case}; best sigma is {best_sigma:.3f}")
 
             # # boundaries
             # ErrorUV = np.zeros(U_HF.shape); ErrorUV[:,:] = U_HF[:,:]
