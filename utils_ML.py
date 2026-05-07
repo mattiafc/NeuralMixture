@@ -471,6 +471,13 @@ def restrict_Jet_data_to_upper_half_PIV_domain_bounds(FeaturesChoices, dic_data,
             nearest_indices_model = indices_upper_half_phisical
 
         for key in set(internalMesh_new.array_names) :
+            print(f'Working model {model} in folder {FeaturesChoices}/{whichJet}/CHAN')
+            print(f'{set(internalMesh_new.array_names)}')
+            print(f'nearest indices model shape is {nearest_indices_model.shape}')
+            print(f'indices_upper_half_phisical is {indices_upper_half_phisical.shape}')
+            print(f'key is {key}')
+            print(f'internalMesh[key] shape is {internalMesh_new[key].shape}')
+            input()
             internalMesh_new[key] *= 0.
             internalMesh_new[key][indices_upper_half_phisical,] = internalMesh[key][nearest_indices_model,]
         

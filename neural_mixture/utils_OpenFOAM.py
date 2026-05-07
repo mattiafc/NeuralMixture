@@ -2,21 +2,21 @@ import os
 import numpy as np
 import pyvista as pv
 
-def OpenFOAM_header():
-    header = "/*--------------------------------*- C++ -*----------------------------------*\\"
-    header += "| =========                 |                                                 |"
-    header += "| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |"
-    header += "|  \\    /   O peration     | Version:  2.3.0                                 |"
-    header += "|   \\  /    A nd           | Web:      www.OpenFOAM.org                      |"
-    header += "|    \\/     M anipulation  |                                                 |"
-    header += "\\*---------------------------------------------------------------------------*/"
-    header += "FoamFile"
-    header += "{"
-    header += "    version     2.0;"
-    header += "    format      ascii;"
-    header += "    class       dictionary;"
-    header += "    object      blockMeshDict;"
-    header += "}"
+def OpenFOAM_header(OF_class, OF_object):
+    header = "/*--------------------------------*- C++ -*----------------------------------*\\\n"
+    header += "| =========                 |                                                 |\n"
+    header += "| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |\n"
+    header += "|  \\    /   O peration     | Version:  2.3.0                                 |\n"
+    header += "|   \\  /    A nd           | Web:      www.OpenFOAM.org                      |\n"
+    header += "|    \\/     M anipulation  |                                                 |\n"
+    header += "\\*---------------------------------------------------------------------------*/\n"
+    header += "FoamFile\n"
+    header += "{\n"
+    header += "    version     2.0;\n"
+    header += "    format      ascii;\n"
+    header += f"    class       {OF_class};\n"
+    header += f"    object      {OF_object};\n"
+    header += "}\n"
     header += "// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //\n\n"
     return header
 
@@ -25,7 +25,19 @@ def get_last_modified_folder(case_dir):
     if not simulation_folders:
         return None
     return max(simulation_folders, key=lambda x: int(''.join(filter(str.isdigit, x))))
-    
+
+def parse_scalar_field(filepath):
+    with open(filepath, 'r') as f:
+        content = f.read()
+    start = content.index('(\n', content.index('nonuniform')) + 2
+    end   = content.index('\n)', start)
+    return np.array([float(v) for v in content[start:end].split()])
+
+def read_openfoam_centers_2D(path, time_folder="0"):
+    """Read OpenFOAM cell center coordinates from Cx, Cy files."""
+    x = parse_scalar_field(os.path.join(path, time_folder, 'Cx'))
+    y = parse_scalar_field(os.path.join(path, time_folder, 'Cy'))
+    return x, y
     
 def read_volScalar_internalField(FolderPath, field_name, nCells):
     array = []
@@ -136,7 +148,7 @@ def write_scalar_field(simul_folder, time_folder, field_name, internal_field, bo
     with open(internal_field_file_path, "w") as file:
 
         
-        file.write(OpenFOAM_header())
+        file.write(OpenFOAM_header("volScalarField",field_name))
 
         
         nCells = len(internal_field)

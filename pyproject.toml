@@ -14,6 +14,10 @@ dependencies = [
     "pandas",
     "matplotlib",
     "scipy",
+    "pyvista",
+    "scikit-learn",
+    "torch",
+    "json"
 ]
 
 [tool.setuptools.packages.find]

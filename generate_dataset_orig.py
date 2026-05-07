@@ -26,7 +26,7 @@ ML_model_choice='RFR_Mourad'
 latest_time_foldername ="5000"
 PathToCases="../"
 WhichWeights = "GaussSearchGrid"
-FeaturesChoice = "../Database"
+FeaturesChoice = "../MouradDatabase"
 SBL_models = ['ANSJ', 'CHAN', 'SEP']
 crit_RFR = ['squared_error', 'absolute_error', "friedman_mse", "poisson"]
 
@@ -82,12 +82,12 @@ weightsU_org, features = mixture_of_expert_Grid_search(dic_data, sigma=1e-3)
 
 weightsU = {key: weightsU_org[key] for key in selected_training_cases if key in weightsU_org}
 
-with open('verify_weightsU.pkl', 'wb') as f:
-    pickle.dump(weightsU, f)
+# with open('verify_weightsU.pkl', 'wb') as f:
+#     pickle.dump(weightsU, f)
 
 features = {key: features[key]['ANSJ'] for key in selected_training_cases if key in features}
-with open('verify_features.pkl', 'wb') as f:
-    pickle.dump(features, f)
+# with open('verify_features.pkl', 'wb') as f:
+#     pickle.dump(features, f)
 
 # print('**************************************************************************************')
 # print(features.keys())
@@ -96,12 +96,12 @@ with open('verify_features.pkl', 'wb') as f:
 #     print (f"features for case {k} have keys {features[k].keys()}")
 
 C_coords = {key: dic_data[key]['CHAN']['internalMesh'].cell_centers().points for key in selected_training_cases}
-with open('verify_C_coords.pkl', 'wb') as f:
-    pickle.dump(C_coords, f)
+# with open('verify_C_coords.pkl', 'wb') as f:
+#     pickle.dump(C_coords, f)
 
 domain_bounds = {key: dic_data[key]['CHAN']['internalMesh'].bounds for key in selected_training_cases}
-with open('verify_domain_bounds.pkl', 'wb') as f:
-    pickle.dump(domain_bounds, f)
+# with open('verify_domain_bounds.pkl', 'wb') as f:
+#     pickle.dump(domain_bounds, f)
 
 # print ('\n--------------- Export exact smoothened weights')
 # for case in keys_weights_export: 
