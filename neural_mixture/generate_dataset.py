@@ -108,12 +108,13 @@ def main():
     with open(args.config) as fh:
         setup_dict = json.load(fh)
 
-    home_directory = setup_dict["simulation_home"]
-    cases_dict     = setup_dict["cases"]
-    bsl_model      = setup_dict["baseline_model"]
-    HF_model       = setup_dict["HF_name"]
-    features_list  = setup_dict["features"]
-    models_list    = setup_dict["models_order"]
+    home_directory    = setup_dict["simulation_home"]
+    dataset_directory = setup_dict["dataset_directory"]
+    cases_dict        = setup_dict["cases"]
+    bsl_model         = setup_dict["baseline_model"]
+    HF_model          = setup_dict["HF_name"]
+    features_list     = setup_dict["features"]
+    models_list       = setup_dict["models_order"]
 
     # print ("post-process jet data, this will change the dic and add new Jet_proj")
     dict_data = create_dic_data(home_directory, cases_dict)
@@ -158,8 +159,6 @@ def main():
 
         dataset = generate_labels_features(dict_data, case_export, features_list, models_list, HF_model)
         nPoints = dataset[f"w_{HF_model}_{models_list[0]}"].shape[0]//len(models_list)
-        print(dataset)
-        input()
 
         # print("Weights calculated, now exporting the data in OpenFOAM format")
         # for case in cases_dict.keys():
@@ -174,7 +173,7 @@ def main():
 
         print(f"=======================================================================================")
         
-        ML_dataset = pd.DataFrame()
+        dataset.to_csv(os.path.join(dataset_directory, f"{case_export}_dataset.csv"), index=False)
 
 
 
