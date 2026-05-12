@@ -16,8 +16,7 @@ dependencies = [
     "scipy",
     "pyvista",
     "scikit-learn",
-    "torch",
-    "json"
+    "torch"
 ]
 
 [tool.setuptools.packages.find]

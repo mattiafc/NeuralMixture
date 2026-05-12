@@ -3,8 +3,11 @@ README.md
 pyproject.toml
 neural_mixture/__init__.py
 neural_mixture/extract_data_all.py
+neural_mixture/generate_dataset.py
 neural_mixture/postprocess_compressor.py
 neural_mixture/setup_simulation.py
+neural_mixture/utils_ML.py
+neural_mixture/utils_OpenFOAM.py
 neural_mixture.egg-info/PKG-INFO
 neural_mixture.egg-info/SOURCES.txt
 neural_mixture.egg-info/dependency_links.txt

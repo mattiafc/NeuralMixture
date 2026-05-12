@@ -15,8 +15,9 @@ import scipy             as sp
 
 from sklearn.ensemble        import RandomForestRegressor
 from sklearn.model_selection import train_test_split
-from utils_ML               import *
-from utils_OpenFOAM         import *
+
+from neural_mixture.utils_ML       import *
+from neural_mixture.utils_OpenFOAM import *
 
 def mirror_symmetric_data(internalMesh):
 
@@ -61,7 +62,7 @@ def mirror_symmetric_data(internalMesh):
 
     return QoI_mirrored_all, copy.deepcopy(QoIs_indices)
     
-def interpolate_RANS_on_HF(home_directory, dic_data, expert_name, RANS_case, Exact_case="Exact"):
+def interpolate_RANS_on_HF(home_directory, dic_data, expert_name, RANS_case, Exact_case):
     ''' 
     Post-treat jet case:\n 
     scale * 0.0508 and rotate by 90° on x-axis
@@ -107,14 +108,21 @@ def main():
     with open(args.config) as fh:
         setup_dict = json.load(fh)
 
-    home_directory = setup_dict["simulation_home"]
-    cases_dict = setup_dict["cases"]
-    bsl_model = setup_dict["baseline_model"]
+    home_directory    = setup_dict["simulation_home"]
+    dataset_directory = setup_dict["dataset_directory"]
+    cases_dict        = setup_dict["cases"]
+    bsl_model         = setup_dict["baseline_model"]
+    HF_model          = setup_dict["HF_name"]
+    features_list     = setup_dict["features"]
+    models_list       = setup_dict["models_order"]
 
     # print ("post-process jet data, this will change the dic and add new Jet_proj")
     dict_data = create_dic_data(home_directory, cases_dict)
 
     for case in cases_dict.keys():
+
+        print(f"================================== Working on {case} ==================================")
+
         if cases_dict[case].get("interpolate_to_floder", False):
 
             experts = cases_dict[case].get("models", {}).keys()
@@ -126,33 +134,21 @@ def main():
 
             for model in experts:
                 dict_data[f"{case}_interpolated"][model] = {}
-                dict_data[f"{case}_interpolated"][model] = interpolate_RANS_on_HF(home_directory, dict_data, model, case, setup_dict['HF_name'])[f"{case}_interpolated"][model]
+                dict_data[f"{case}_interpolated"][model] = interpolate_RANS_on_HF(home_directory, dict_data, model, case, HF_model)[f"{case}_interpolated"][model]
 
-                if not(model == setup_dict["HF_name"]):
+                if not(model == HF_model):
                     generate_FOAM_case_from_pyvista(os.path.join(target_dir, model),
                                             dict_data[f"{case}_interpolated"][model]["internalMesh"], 
                                             dict_data[f"{case}_interpolated"][model]["boundary"], 
-                                            os.path.join(home_directory, cases_dict[case]["sub_directory"], setup_dict['HF_name'], 'constant/polyMesh'),
+                                            os.path.join(home_directory, cases_dict[case]["sub_directory"], HF_model, 'constant/polyMesh'),
                                             time_value=5000)
                 else:
                     
-                    os.system(f'cp -r {os.path.join(home_directory, cases_dict[case]["sub_directory"], setup_dict["HF_name"])} \
-                          {os.path.join(target_dir, setup_dict["HF_name"])}')
+                    os.system(f'cp -r {os.path.join(home_directory, cases_dict[case]["sub_directory"], HF_model)} \
+                          {os.path.join(target_dir, HF_model)}')
                 
             del dict_data[f"{case}"]
 
-
-    weightsU_org, features = generate_labels_features(dict_data, setup_dict["features"], setup_dict["models_order"])
-
-    weightsU = {key: weightsU_org[key] for key in dict_data.keys()  if key in weightsU_org}
-    features = {key: features[key]['CHAN'] for key in dict_data.keys() if key in features}
-    C_coords = {key: dict_data[key]['CHAN']['internalMesh'].cell_centers().points for key in dict_data.keys()}
-    domain_bounds = {key: dict_data[key]['CHAN']['internalMesh'].bounds for key in dict_data.keys()}
-
-    print(weightsU["CD12600"].shape)
-
-    print("Weights calculated, now exporting the data in OpenFOAM format")
-    for case in cases_dict.keys():
         print(case)
         if cases_dict[case].get("interpolate_to_floder", False):
             case_folder = cases_dict[case]["interpolate_to_floder"]
@@ -161,16 +157,23 @@ def main():
             case_folder = case
             case_export = case
 
+        dataset = generate_labels_features(dict_data, case_export, features_list, models_list, HF_model)
+        nPoints = dataset[f"w_{HF_model}_{models_list[0]}"].shape[0]//len(models_list)
+
+        # print("Weights calculated, now exporting the data in OpenFOAM format")
+        # for case in cases_dict.keys():
         time_folder = "5000"
         
-        export_folder = os.path.join(home_directory, case_folder, "Exact")
+        export_folder = os.path.join(home_directory, case_folder, HF_model)
         simul_folder = os.path.join(export_folder,time_folder)
-        boundary_data, nCells = read_boundary_data(os.path.join(export_folder,"constant/polyMesh"))
+        boundary_data, _ = read_boundary_data(os.path.join(export_folder,"constant/polyMesh"))
 
-        for i_ in range(3):
-            write_scalar_field(simul_folder, time_folder, f"w_{setup_dict["models_order"][i_]}_exact", weightsU_org[case_export][:,i_], boundary_data)
+        for i_, model in enumerate(models_list):
+            write_scalar_field(simul_folder, time_folder, f"w_{HF_model}_{model}", dataset[f"w_{HF_model}_{model}"].to_numpy()[:nPoints], boundary_data)
 
-    ML_dataset = pd.DataFrame()
+        print(f"=======================================================================================")
+        
+        dataset.to_csv(os.path.join(dataset_directory, f"{case_export}_dataset.csv"), index=False)
 
 
 

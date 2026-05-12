@@ -1,3 +1,4 @@
 [console_scripts]
+generate_dataset = neural_mixture.generate_dataset:main
 postprocess_compressor = neural_mixture.postprocess_compressor:main
 setup_simulation = neural_mixture.setup_simulation:main
