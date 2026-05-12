@@ -684,6 +684,9 @@ Requires-Dist: numpy
 Requires-Dist: pandas
 Requires-Dist: matplotlib
 Requires-Dist: scipy
+Requires-Dist: pyvista
+Requires-Dist: scikit-learn
+Requires-Dist: torch
 Dynamic: license-file
 
 # NeuralMixture

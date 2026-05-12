@@ -16,7 +16,7 @@ from sklearn.model_selection import cross_val_score
 from sklearn.ensemble        import RandomForestRegressor
 from sklearn.metrics         import mean_absolute_error
 
-from utils_OpenFOAM          import *
+from neural_mixture.utils_OpenFOAM import *
 
 def create_dic_data(home_directory, cases) :
     
@@ -42,13 +42,13 @@ def create_dic_data(home_directory, cases) :
             
     return dic_data
 
-def generate_labels_features(dic_data, case, feature_names, model_order):
+def generate_labels_features(dic_data, case, feature_names, model_order, HF_model):
 
     features = {}
     weightsU ={}
 
     # internal mesh, getting the U,V components of the high fidelity solution
-    U_HF = dic_data[case]['Exact']['internalMesh']['U'][:,0:2]#.reshape((-1,1)) # changed rebecca
+    U_HF = dic_data[case][HF_model]['internalMesh']['U'][:,0:2]#.reshape((-1,1)) # changed rebecca
     weightsU_case = []
     list_U_models= []
 
@@ -57,7 +57,7 @@ def generate_labels_features(dic_data, case, feature_names, model_order):
 
     idx = 0
     for model in dic_data[case]:
-        if model != 'Exact':
+        if model != HF_model:
 
             assert(model == model_order[idx])
 
@@ -70,25 +70,21 @@ def generate_labels_features(dic_data, case, feature_names, model_order):
                 features[feat] = np.array(dic_data[case][model]['internalMesh'][feat]).flatten()
                 
             all_data.append(pd.DataFrame(features))
-            
+        
             idx+=1
 
     dataset = pd.concat(all_data, ignore_index=True)
-    print(dataset)
-    input()
+    # print(dataset)
+    # input()
 
     weightsU_case, best_sigma = find_optimal_weights(U_HF, list_U_models)
-    assert np.abs(np.max(np.sum(weightsU_case, axis=0)-1.0)) < 1e-6
-
-    # weightsU.update({case : np.hstack([ np.array( w_ / sum(weightsU_case)).reshape((-1,1)) for w_ in weightsU_case]) })
-    print(len(weightsU_case),len(weightsU_case[0]), len(features['case']))
-    input()
-
-    features.update({f"w_{model}": weightsU[case][:,i].reshape((-1,1)) for i, model in enumerate(model_order)})
-
+    weightsU_case = np.tile(weightsU_case, (len(model_order), 1))
     print(f"Computed weights for case {case}; best sigma is {best_sigma:.3f}")
+
+    for model in model_order:
+        dataset[f"w_{HF_model}_{model}"] = weightsU_case[:, model_order.index(model)]
         
-    return weightsU, features
+    return dataset
 
 def find_optimal_weights(U_HF, list_U_models):
 
@@ -104,6 +100,8 @@ def find_optimal_weights(U_HF, list_U_models):
     sigma_opt = res.x
     weights = compute_weights(sigma_opt)
     best_weights = [w / sum(weights) for w in weights]
+
+    best_weights = np.hstack(best_weights)
 
     return best_weights, sigma_opt
 
