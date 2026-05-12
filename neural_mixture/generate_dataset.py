@@ -115,6 +115,9 @@ def main():
     dict_data = create_dic_data(home_directory, cases_dict)
 
     for case in cases_dict.keys():
+
+        print(f"================================== Working on {case} ==================================")
+
         if cases_dict[case].get("interpolate_to_floder", False):
 
             experts = cases_dict[case].get("models", {}).keys()
@@ -141,18 +144,6 @@ def main():
                 
             del dict_data[f"{case}"]
 
-
-    weightsU_org, features = generate_labels_features(dict_data, setup_dict["features"], setup_dict["models_order"])
-
-    weightsU = {key: weightsU_org[key] for key in dict_data.keys()  if key in weightsU_org}
-    features = {key: features[key]['CHAN'] for key in dict_data.keys() if key in features}
-    C_coords = {key: dict_data[key]['CHAN']['internalMesh'].cell_centers().points for key in dict_data.keys()}
-    domain_bounds = {key: dict_data[key]['CHAN']['internalMesh'].bounds for key in dict_data.keys()}
-
-    print(weightsU["CD12600"].shape)
-
-    print("Weights calculated, now exporting the data in OpenFOAM format")
-    for case in cases_dict.keys():
         print(case)
         if cases_dict[case].get("interpolate_to_floder", False):
             case_folder = cases_dict[case]["interpolate_to_floder"]
@@ -161,6 +152,15 @@ def main():
             case_folder = case
             case_export = case
 
+        weightsU_org, features = generate_labels_features(dict_data, case_export, setup_dict["features"], setup_dict["models_order"])
+
+        weightsU = {key: weightsU_org[key] for key in dict_data.keys()  if key in weightsU_org}
+        features = {key: features[key]['CHAN'] for key in dict_data.keys() if key in features}
+        C_coords = {key: dict_data[key]['CHAN']['internalMesh'].cell_centers().points for key in dict_data.keys()}
+        domain_bounds = {key: dict_data[key]['CHAN']['internalMesh'].bounds for key in dict_data.keys()}
+
+        # print("Weights calculated, now exporting the data in OpenFOAM format")
+        # for case in cases_dict.keys():
         time_folder = "5000"
         
         export_folder = os.path.join(home_directory, case_folder, "Exact")
@@ -170,7 +170,8 @@ def main():
         for i_ in range(3):
             write_scalar_field(simul_folder, time_folder, f"w_{setup_dict["models_order"][i_]}_exact", weightsU_org[case_export][:,i_], boundary_data)
 
-    ML_dataset = pd.DataFrame()
+        print(f"=======================================================================================")
+        # ML_dataset = pd.DataFrame()
 
 
 

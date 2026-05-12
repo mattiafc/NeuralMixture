@@ -4,6 +4,7 @@ import torch
 
 import pyvista           as pv
 import numpy             as np
+import pandas            as pd
 import matplotlib.pyplot as plt
 
 from scipy.spatial     import cKDTree
@@ -41,51 +42,51 @@ def create_dic_data(home_directory, cases) :
             
     return dic_data
 
-def generate_labels_features(dic_data, feature_names, model_order):
-
-    print(f"=============================================================================")
+def generate_labels_features(dic_data, case, feature_names, model_order):
 
     features = {}
     weightsU ={}
 
-    for case in dic_data:
+    # internal mesh, getting the U,V components of the high fidelity solution
+    U_HF = dic_data[case]['Exact']['internalMesh']['U'][:,0:2]#.reshape((-1,1)) # changed rebecca
+    weightsU_case = []
+    list_U_models= []
 
-        features.update({case : {}})
+    # dataset = pd.DataFrame(columns = ["model", "case"] + feature_names)
+    all_data = []
 
-        # internal mesh, getting the U,V components of the high fidelity solution
-        U_HF = dic_data[case]['Exact']['internalMesh']['U'][:,0:2]#.reshape((-1,1)) # changed rebecca
-        weightsU_case = []
-        list_U_models= []
+    idx = 0
+    for model in dic_data[case]:
+        if model != 'Exact':
 
-        idx = 0;
-        for model in dic_data[case]:
-            if model != 'Exact':
+            assert(model == model_order[idx])
 
-                assert(model == model_order[idx])
-                idx+=1
+            U_model = dic_data[case][model]['internalMesh']['U'][:,0:2]#.reshape((-1,1)) # changed rebecca
+            list_U_models.append(U_model)
 
-                U_model = dic_data[case][model]['internalMesh']['U'][:,0:2]#.reshape((-1,1)) # changed rebecca
-                list_U_models.append(U_model)
+            features = {'case': [case]*len(U_model), 'model': [model]*len(U_model)}
+            
+            for feat in feature_names:
+                features[feat] = np.array(dic_data[case][model]['internalMesh'][feat]).flatten()
+                
+            all_data.append(pd.DataFrame(features))
+            
+            idx+=1
 
-                features[case].update({model : np.hstack([np.array(dic_data[case][model]['internalMesh'][feat]).reshape((-1,1)) for feat in feature_names]) })
+    dataset = pd.concat(all_data, ignore_index=True)
+    print(dataset)
+    input()
 
+    weightsU_case, best_sigma = find_optimal_weights(U_HF, list_U_models)
+    assert np.abs(np.max(np.sum(weightsU_case, axis=0)-1.0)) < 1e-6
 
-        weightsU_case, best_sigma = find_optimal_weights(U_HF, list_U_models)
-        weightsU.update({case : np.hstack([ np.array( w_ / sum(weightsU_case)).reshape((-1,1)) for w_ in weightsU_case]) })
+    # weightsU.update({case : np.hstack([ np.array( w_ / sum(weightsU_case)).reshape((-1,1)) for w_ in weightsU_case]) })
+    print(len(weightsU_case),len(weightsU_case[0]), len(features['case']))
+    input()
 
-        print(f"Computed weights for case {case}; best sigma is {best_sigma:.3f}")
+    features.update({f"w_{model}": weightsU[case][:,i].reshape((-1,1)) for i, model in enumerate(model_order)})
 
-            # # boundaries
-            # ErrorUV = np.zeros(U_HF.shape); ErrorUV[:,:] = U_HF[:,:]
-            # n_models = len(weightsU_case)   # au lieu de range(3) en dur
-            # for j_ in range(n_models):
-            #     # weightsU_case[j_] : shape (N,)
-            #     # list_U_models[j_] : shape (N,2)
-            #     ErrorUV -= weightsU_case[j_].reshape(-1, 1) * list_U_models[j_]
-            #     # broadcasting → (N,1)*(N,2) = (N,2)
-            # norm_ErrorUV = np.linalg.norm(ErrorUV)
-
-    print(f"=============================================================================")
+    print(f"Computed weights for case {case}; best sigma is {best_sigma:.3f}")
         
     return weightsU, features
 
@@ -99,7 +100,7 @@ def find_optimal_weights(U_HF, list_U_models):
         w_norm = [w / sum(weights) for w in weights]
         return calculate_error_(U_HF, list_U_models, w_norm)
 
-    res = minimize_scalar(optimize_weight_loss, bounds=(1e-5, 1.), method='bounded')
+    res = minimize_scalar(optimize_weight_loss, bounds=(1e-6, 1.), method='bounded')
     sigma_opt = res.x
     weights = compute_weights(sigma_opt)
     best_weights = [w / sum(weights) for w in weights]
