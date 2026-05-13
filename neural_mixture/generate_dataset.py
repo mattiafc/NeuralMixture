@@ -108,13 +108,12 @@ def main():
     with open(args.config) as fh:
         setup_dict = json.load(fh)
 
-    home_directory    = setup_dict["simulation_home"]
-    dataset_directory = setup_dict["dataset_directory"]
-    cases_dict        = setup_dict["cases"]
-    bsl_model         = setup_dict["baseline_model"]
-    HF_model          = setup_dict["HF_name"]
-    features_list     = setup_dict["features"]
-    models_list       = setup_dict["models_order"]
+    home_directory   = setup_dict["database_home_directory"]
+    output_directory = setup_dict["output_database_directory"]
+    cases_dict       = setup_dict["cases"]
+    HF_model         = setup_dict["HF_name"]
+    features_list    = setup_dict["features"]
+    models_list      = setup_dict["models_order"]
 
     # print ("post-process jet data, this will change the dic and add new Jet_proj")
     dict_data = create_dic_data(home_directory, cases_dict)
@@ -173,7 +172,7 @@ def main():
 
         print(f"=======================================================================================")
         
-        dataset.to_csv(os.path.join(dataset_directory, f"{case_export}_dataset.csv"), index=False)
+        dataset.to_csv(os.path.join(output_directory, f"{case_export}_dataset.csv"), index=False)
 
 
 
