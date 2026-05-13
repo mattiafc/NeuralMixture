@@ -1,5 +1,4 @@
 import os
-import copy
 import torch
 
 import pyvista           as pv
@@ -12,7 +11,6 @@ from scipy.interpolate import griddata
 from scipy.optimize    import minimize_scalar
 from scipy.interpolate import RBFInterpolator
 
-from sklearn.model_selection import cross_val_score
 from sklearn.ensemble        import RandomForestRegressor
 from sklearn.metrics         import mean_absolute_error
 

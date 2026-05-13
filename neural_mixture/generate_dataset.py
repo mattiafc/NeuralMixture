@@ -1,20 +1,7 @@
-import pickle
 import copy
-import sys
-import math
-import scipy.ndimage
-import scipy.interpolate
 import argparse
 import json
-
-import pyvista           as pv
 import numpy             as np
-import pandas            as pd
-import matplotlib.pyplot as plt
-import scipy             as sp 
-
-from sklearn.ensemble        import RandomForestRegressor
-from sklearn.model_selection import train_test_split
 
 from neural_mixture.utils_ML       import *
 from neural_mixture.utils_OpenFOAM import *
@@ -62,7 +49,7 @@ def mirror_symmetric_data(internalMesh):
 
     return QoI_mirrored_all, copy.deepcopy(QoIs_indices)
     
-def interpolate_RANS_on_HF(home_directory, dic_data, expert_name, RANS_case, Exact_case):
+def interpolate_RANS_on_HF(dic_data, expert_name, RANS_case, Exact_case):
     ''' 
     Post-treat jet case:\n 
     scale * 0.0508 and rotate by 90° on x-axis
@@ -133,7 +120,7 @@ def main():
 
             for model in experts:
                 dict_data[f"{case}_interpolated"][model] = {}
-                dict_data[f"{case}_interpolated"][model] = interpolate_RANS_on_HF(home_directory, dict_data, model, case, HF_model)[f"{case}_interpolated"][model]
+                dict_data[f"{case}_interpolated"][model] = interpolate_RANS_on_HF(dict_data, model, case, HF_model)[f"{case}_interpolated"][model]
 
                 if not(model == HF_model):
                     generate_FOAM_case_from_pyvista(os.path.join(target_dir, model),
