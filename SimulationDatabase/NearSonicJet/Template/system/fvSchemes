@@ -1,0 +1,76 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  1.7.0                                 |
+|   \\  /    A nd           | Web:      www.OpenFOAM.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "system";
+    object      fvSchemes;
+}
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+ddtSchemes
+{
+    default         steadyState;  
+}
+
+gradSchemes
+{
+    default         cellLimited leastSquares 1.0;  //  More stable than Gauss linear
+    grad(p)         cellLimited leastSquares 1.0;
+    grad(U)         cellLimited leastSquares 1.0;
+}
+
+divSchemes
+{
+    default         Gauss linear;
+    
+    div(phi,U)      bounded Gauss upwind;  //  
+    div(phi,k)      bounded Gauss upwind;  //  Prevents excessive diffusion
+    div(phi,omega)  bounded Gauss upwind;
+
+    div((nuEff*dev2(T(grad(U))))) Gauss linear;
+
+    div(R)          Gauss upwind;
+
+    div(phi,e)      bounded Gauss limitedLinear 1.0;  //  Better energy transport without overshoots
+    div(phi,K)      bounded Gauss limitedLinear 1.0;
+    div(phi,Ekp)    bounded Gauss limitedLinear 1.0;
+
+    div(phid,p)     Gauss upwind;
+    div((phi|interpolate(rho)),p)  Gauss linearUpwind;  //  Ensures stable pressure interpolation
+}
+
+laplacianSchemes
+{
+    default         Gauss linear corrected;  //  Reduces artificial viscosity
+}
+
+interpolationSchemes
+{
+    default         linear;
+}
+
+snGradSchemes
+{
+    default         limited 0.33;  //  More stable than `corrected`
+}
+
+fluxRequired
+{
+    default         no;
+    p;
+}
+
+wallDist
+{
+    method          meshWave;
+}
+

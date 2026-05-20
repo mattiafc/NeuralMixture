@@ -1,0 +1,18 @@
+{
+    "database_home_directory": "/home/mciarlatani/DataDrivenML/DatabaseMattia",
+    "output_database_directory": "/home/mciarlatani/DataDrivenML/MachineLearning",
+    "features":["U","grad(U)","p","grad(p)","nut","grad(nut)","k","grad(k)","R",
+                "eta_1","eta_2","eta_3","eta_4","eta_5","eta_6","eta_7","eta_8","eta_9","eta_10","eta_11"],
+    "models_order": ["ANSJ","CHAN","SEP"],
+    "HF_name":"Exact",
+
+    "cases":
+    {
+        "CBFS13700":
+        {
+            "sub_directory":"CBFS13700",
+            "models":{"Exact":"5000","ANSJ":"5000","CHAN":"5000","SEP":"5000"}
+        }
+    }
+
+}

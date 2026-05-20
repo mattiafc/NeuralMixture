@@ -6,87 +6,10 @@ import numpy             as np
 from neural_mixture.utils_ML       import *
 from neural_mixture.utils_OpenFOAM import *
 
-def mirror_symmetric_data(internalMesh):
-
-    QoIs_list = list(dict.fromkeys(internalMesh.array_names))
-    QoIs_indices = {}
-
-    cont = 0
-
-    for QoI in QoIs_list:
-
-        cont_old = copy.deepcopy(cont)
-        
-        QoI_original_mesh = internalMesh[QoI]
-        
-        if len(QoI_original_mesh.shape) == 1:
-            QoI_original_mesh = QoI_original_mesh.reshape(-1, 1)
-            idx_flip = 0
-            idx_reorder = [0]
-
-        elif QoI_original_mesh.shape[1] == 3:
-            idx_flip = -1
-            idx_reorder = [0,2,1]
-            
-        elif QoI_original_mesh.shape[1] == 6:
-            idx_flip = [2,4]
-            idx_reorder = [0,2,1,5,4,3]
-
-        elif QoI_original_mesh.shape[1] == 9:
-            idx_flip = [2,5,6,7]            
-            idx_reorder = [0,2,1,6,8,7,3,5,4]
-
-        QoI_mirrored = np.vstack((QoI_original_mesh, QoI_original_mesh))
-        nPoints, nComp = QoI_original_mesh.shape
-        
-        if QoI in ['eta8','Cz'] or nComp>1:
-            QoI_mirrored[nPoints:, idx_flip] *= -1
-
-        if cont == 0:
-            QoI_mirrored_all = copy.deepcopy(QoI_mirrored[:,idx_reorder])
-        else:        
-            QoI_mirrored_all = np.hstack((QoI_mirrored_all, QoI_mirrored[:,idx_reorder]))
-
-        cont += nComp
-
-        QoIs_indices[QoI] = [cont_old, cont]
-
-    return QoI_mirrored_all, copy.deepcopy(QoIs_indices)
-    
-def interpolate_RANS_on_HF(dic_data, expert_name, RANS_case, Exact_case):
-    ''' 
-    Post-treat jet case:\n 
-    scale * 0.0508 and rotate by 90° on x-axis
-    '''
-
-    # Transform the target mesh (PIV mesh) to match the RANS mesh orientation and scale
-    targetMesh = dic_data[RANS_case][Exact_case]["internalMesh"].rotate_x(90, inplace=False)
-    targetMesh.points *= 0.0508
-
-    dic_data[f"{RANS_case}_interpolated"][expert_name] = copy.deepcopy(dic_data[RANS_case][Exact_case])
-
-    target_mesh = targetMesh.cell_centers().points
-    source_half_mesh = dic_data[RANS_case][expert_name]["internalMesh"].cell_centers().points
-
-    nPoints = source_half_mesh.shape[0]
-    source_mesh = np.vstack((source_half_mesh, source_half_mesh))
-    source_mesh[nPoints:, -1] *= -1
-
-    source_QoIs, QoI_indices = mirror_symmetric_data(dic_data[RANS_case][expert_name]["internalMesh"])
-    target_QoIs = interpolate_rbf(source_mesh[:,0], source_mesh[:,2], source_QoIs, target_mesh[:,0], target_mesh[:,2], neighbors=240)
-
-    for QoI, idx in QoI_indices.items():
-        if idx[0] == idx[1]-1:
-            dic_data[f"{RANS_case}_interpolated"][expert_name]["internalMesh"][QoI] = target_QoIs[:, idx[0]]
-        else:
-            dic_data[f"{RANS_case}_interpolated"][expert_name]["internalMesh"][QoI] = target_QoIs[:, idx[0]:idx[1]]
-
-    return dic_data
-
 def main():
     
     ap = argparse.ArgumentParser(
-        prog="generate_dataset",
+        prog="feature_engineering",
         description=(
             "Generate the dataset to be used to train the RFR model. \n"
             "You can take a look at a sample of the Json file in the examples directory. \n"

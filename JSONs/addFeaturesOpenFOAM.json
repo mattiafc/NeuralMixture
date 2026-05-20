@@ -1,0 +1,25 @@
+{
+    "home_directory": "./",
+    "baseline_directory": "Template",
+
+    "simulations": 
+    {
+        "channel_flow":
+            {
+                "model":  "CHAN",
+                "postprocess_command": "./postprocess.sh > log.postProcess"
+            },
+
+        "jet_ANSJ":
+            {
+                "model":  "ANSJ",
+                "postprocess_command": "./postprocess.sh > log.postProcess"
+            },
+
+        "separated_flows":
+            {
+                "model":  "SEP",
+                "postprocess_command": "./postprocess.sh > log.postProcess"
+            }
+    }
+}

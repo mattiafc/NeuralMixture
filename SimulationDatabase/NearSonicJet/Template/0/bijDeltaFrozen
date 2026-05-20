@@ -1,0 +1,73 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  2306                                  |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    arch        "LSB;label=32;scalar=64";
+    class       volSymmTensorField;
+    location    "5000";
+    object      bijDeltaFrozen;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+dimensions      [0 0 0 0 0 0 0];
+
+internalField   uniform (0 0 0 0 0 0);
+
+boundaryField
+{
+    axis
+    {
+        type            empty;
+    }
+    inlet
+    {
+        type            calculated;
+        value           uniform (0 0 0 0 0 0);
+    }
+    wedge1
+    {
+        type            wedge;
+    }
+    wedge2
+    {
+        type            wedge;
+    }
+    wall1
+    {
+        type            calculated;
+        value           uniform (0 0 0 0 0 0);
+    }
+    inflow1
+    {
+        type            calculated;
+        value           uniform (0 0 0 0 0 0);
+    }
+    wall2
+    {
+        type            calculated;
+        value           uniform (0 0 0 0 0 0);
+    }
+    inflow2
+    {
+        type            zeroGradient;
+    }
+    outlet
+    {
+        type            zeroGradient;
+    }
+    wall3
+    {
+        type            calculated;
+        value           uniform (0 0 0 0 0 0);
+    }
+}
+
+
+// ************************************************************************* //

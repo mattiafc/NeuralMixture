@@ -7,53 +7,43 @@
         "channel_flow":
             {
                 "model":  "CHAN",
+                "generate_directory": true,
                 "mesh_command": false,
                 "blending": false,
                 "theta": "(0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)",
                 "thetaR": "(0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)",
                 "preprocess_command": "potentialFoam",
                 "decompose_command": "decomposePar -latestTime",
-                "simulation_command": "mpirun -np 5 simpleFoamFeatures -parallel > log.OpenFOAM && reconstructPar -latestTime"
+                "simulation_command": "mpirun -np 5 simpleFoamFeatures -parallel > log.OpenFOAM && reconstructPar -latestTime",
+                "postprocess_command": "reconstructPar -latestTime && ./postprocess.sh > log.postProcess && rm -r processor*"
             },
 
         "jet_ANSJ":
             {
                 "model":  "ANSJ",
+                "generate_directory": true,
                 "mesh_command": false,
                 "blending": false,
                 "theta": "(0.33 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)",
                 "thetaR": "(0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)",
                 "preprocess_command": "potentialFoam",
                 "decompose_command": "decomposePar -latestTime",
-                "simulation_command": "mpirun -np 5 simpleFoamFeatures -parallel > log.OpenFOAM && reconstructPar -latestTime"
+                "simulation_command": "mpirun -np 5 simpleFoamFeatures -parallel > log.OpenFOAM && reconstructPar -latestTime",
+                "postprocess_command": "reconstructPar -latestTime && ./postprocess.sh > log.postProcess && rm -r processor*"
             },
 
         "separated_flows":
             {
                 "model":  "SEP",
+                "generate_directory": true,
                 "mesh_command": false,
                 "blending": false,
                 "theta": "(0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)",
                 "thetaR": "(0.681 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)",
                 "preprocess_command": "potentialFoam",
                 "decompose_command": "decomposePar -latestTime",
-                "simulation_command": "mpirun -np 5 simpleFoamFeatures -parallel > log.OpenFOAM && reconstructPar -latestTime"
+                "simulation_command": "mpirun -np 5 simpleFoamFeatures -parallel > log.OpenFOAM && reconstructPar -latestTime",
+                "postprocess_command": "reconstructPar -latestTime && ./postprocess.sh > log.postProcess && rm -r processor*"
             }
-    },
-
-        "blending":
-            {
-                "model":  "Blend",
-                "mesh_command": false,
-                "blending": ["CHAN", "ANSJ", "SEP"],
-                "theta_CHAN" : "(0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)",
-                "thetaR_CHAN": "(0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)",
-                "theta_SEP"  : "(0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 5.21 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)",
-                "thetaR_SEP" : "(0.681 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)",
-                "theta_ANSJ" : "(0.33 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)",
-                "thetaR_ANSJ": "(0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)",
-                "preprocess_command": "potentialFoam",
-                "decompose_command": "decomposePar -latestTime",
-                "simulation_command": "mpirun -np 5 simpleFoamFeatures -parallel > log.OpenFOAM"
-            }
+    }
 }

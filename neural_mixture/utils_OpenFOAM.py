@@ -333,6 +333,8 @@ def generate_FOAM_case_from_pyvista(path_output, internalMesh, boundaries, sourc
             field_class, field_type = 'volVectorField',     'vector'
         elif data.shape[1] == 6:
             field_class, field_type = 'volSymmTensorField', 'symmTensor'
+        elif data.shape[1] == 9:
+            field_class, field_type = 'volTensorField', 'tensor'
         else:
             print(f"Skipping {QoI}: unsupported shape {data.shape}")
             continue
@@ -353,7 +355,10 @@ def generate_FOAM_case_from_pyvista(path_output, internalMesh, boundaries, sourc
                 f.write(f'internalField   nonuniform List<symmTensor>\n{n_cells}\n(\n')
                 for row in data:
                     f.write(f'({row[0]} {row[1]} {row[2]} {row[3]} {row[4]} {row[5]})\n')
-
+            elif field_type == 'tensor':
+                f.write(f'internalField   nonuniform List<tensor>\n{n_cells}\n(\n')
+                for row in data:
+                    f.write(f'({row[0]} {row[1]} {row[2]} {row[3]} {row[4]} {row[5]} {row[6]} {row[7]} {row[8]})\n')
             f.write(');\n\n')
             f.write('boundaryField\n{\n')
 

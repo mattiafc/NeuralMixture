@@ -25,7 +25,7 @@ def create_dic_data(home_directory, cases) :
     '''
     dic_data = {}
 
-    print(f"============================================")
+    print(f"=========================================================")
     for case in cases:
 
         print(f"Loading case {case}")
@@ -36,14 +36,13 @@ def create_dic_data(home_directory, cases) :
             internalMesh, boundaries = load_OpenFOAM_data(path)
             dic_data[case].update({model:{"internalMesh":internalMesh, "boundary": boundaries, "nCells":len(internalMesh.cell_centers().points)}})
     
-    print(f"============================================")
+    print(f"=========================================================")
             
     return dic_data
 
 def generate_labels_features(dic_data, case, feature_names, model_order, HF_model):
 
     features = {}
-    weightsU ={}
 
     # internal mesh, getting the U,V components of the high fidelity solution
     U_HF = dic_data[case][HF_model]['internalMesh']['U'][:,0:2]#.reshape((-1,1)) # changed rebecca
@@ -65,8 +64,35 @@ def generate_labels_features(dic_data, case, feature_names, model_order, HF_mode
             features = {'case': [case]*len(U_model), 'model': [model]*len(U_model)}
             
             for feat in feature_names:
-                features[feat] = np.array(dic_data[case][model]['internalMesh'][feat]).flatten()
-                
+                data = np.array(dic_data[case][model]['internalMesh'][feat])
+
+                if data.ndim == 1:
+                    features[feat] = np.array(dic_data[case][model]['internalMesh'][feat]).flatten()
+                    
+                elif data.shape[1] == 3:
+                    features[f"{feat}_x"] = data[:,0].flatten()
+                    features[f"{feat}_y"] = data[:,1].flatten()
+                    features[f"{feat}_z"] = data[:,2].flatten()
+
+                elif data.shape[1] == 6:
+                    features[f"{feat}_xx"] = data[:,0].flatten()
+                    features[f"{feat}_xy"] = data[:,1].flatten()
+                    features[f"{feat}_xz"] = data[:,2].flatten()
+                    features[f"{feat}_yy"] = data[:,3].flatten()
+                    features[f"{feat}_yz"] = data[:,4].flatten()
+                    features[f"{feat}_zz"] = data[:,5].flatten()
+
+                elif data.shape[1] == 9:
+                    features[f"{feat}_xx"] = data[:,0].flatten()
+                    features[f"{feat}_xy"] = data[:,1].flatten()
+                    features[f"{feat}_xz"] = data[:,2].flatten()
+                    features[f"{feat}_yx"] = data[:,3].flatten()
+                    features[f"{feat}_yy"] = data[:,4].flatten()
+                    features[f"{feat}_yz"] = data[:,5].flatten()
+                    features[f"{feat}_zx"] = data[:,6].flatten()
+                    features[f"{feat}_zy"] = data[:,7].flatten()
+                    features[f"{feat}_zz"] = data[:,8].flatten()
+                    
             all_data.append(pd.DataFrame(features))
         
             idx+=1
@@ -77,7 +103,7 @@ def generate_labels_features(dic_data, case, feature_names, model_order, HF_mode
 
     weightsU_case, best_sigma = find_optimal_weights(U_HF, list_U_models)
     weightsU_case = np.tile(weightsU_case, (len(model_order), 1))
-    print(f"Computed weights for case {case}; best sigma is {best_sigma:.3f}")
+    print(f"Best sigma for case {case}: {best_sigma:.5f}")
 
     for model in model_order:
         dataset[f"w_{HF_model}_{model}"] = weightsU_case[:, model_order.index(model)]

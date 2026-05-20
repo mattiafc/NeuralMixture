@@ -1,0 +1,93 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  1.7.0                                 |
+|   \\  /    A nd           | Web:      www.OpenFOAM.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "system";
+    object      fvSolution;
+}
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+solvers
+{
+    p
+    {
+        solver          GAMG;  //  Best for pressure correction
+        tolerance       1e-10;  //  Slightly relaxed for stability
+        relTol          0.001;  //  More stable for compressible flows
+        minIter         2;
+        smoother        DICGaussSeidel;
+        nPreSweeps      1;
+        nPostSweeps     2;
+        nFinestSweeps   2;
+        scaleCorrection true;
+        directSolveCoarsest false;
+        cacheAgglomeration on;
+        nCellsInCoarsestLevel 100;
+        agglomerator     faceAreaPair;
+        mergeLevels      1;
+    }
+    Phi
+    {
+      $p
+    }
+
+    "(U|k|omega|e)"
+    {
+        solver          PBiCGStab;
+        preconditioner  DILU;
+        tolerance       1e-10;  //  Tighter tolerance for better residual drop
+        relTol          0.01;  //  More stability
+    }
+
+    rho
+    {
+        solver          PCG;
+        preconditioner  DIC;
+        tolerance       1e-10;  //  More stable than `1e-8`
+        relTol          0.01;  //  Faster convergence
+    }
+}
+
+SIMPLE
+{
+    residualControl
+    {
+        p               1e-6;
+        U               1e-6;
+        "(k|omega|e)"   1e-6;
+    }
+
+    nNonOrthogonalCorrectors 2;
+    pMinFactor      0.7;
+    pMaxFactor      1.2;  //  Reduced from 1.5 to 1.2
+}
+
+
+relaxationFactors
+{
+    fields
+    {
+        U               0.4;  //  More stable for velocity
+        e               0.8;  //  Helps stabilize temperature fluctuations
+        p               0.5;  //  Prevents pressure divergence
+        rho             0.05;  //  More stable than `0.2`
+    }
+    
+    equations
+    {
+        U               0.4;
+        e               0.5;
+        "(k|omega)"     0.5;
+    }
+}
+
+

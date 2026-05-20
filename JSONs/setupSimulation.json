@@ -7,43 +7,50 @@
         "channel_flow":
             {
                 "model":  "CHAN",
+                "generate_directory": true,
                 "mesh_command": false,
                 "blending": false,
                 "theta": "(0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)",
                 "thetaR": "(0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)",
                 "preprocess_command": "potentialFoam",
                 "decompose_command": "decomposePar -latestTime",
-                "simulation_command": "mpirun -np 8 simpleFoamFeatures -parallel > log.OpenFOAM && reconstructPar -latestTime"
+                "simulation_command": "mpirun -np 8 simpleFoamFeatures -parallel > log.OpenFOAM && reconstructPar -latestTime",
+                "postprocess_command": "./postprocess.sh > log.postProcess"
             },
 
         "jet_ANSJ":
             {
                 "model":  "ANSJ",
+                "generate_directory": true,
                 "mesh_command": false,
                 "blending": false,
                 "theta": "(0.33 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)",
                 "thetaR": "(0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)",
                 "preprocess_command": "potentialFoam",
                 "decompose_command": "decomposePar -latestTime",
-                "simulation_command": "mpirun -np 8 simpleFoamFeatures -parallel > log.OpenFOAM && reconstructPar -latestTime"
+                "simulation_command": "mpirun -np 8 simpleFoamFeatures -parallel > log.OpenFOAM && reconstructPar -latestTime",
+                "postprocess_command": "./postprocess.sh > log.postProcess"
             },
 
         "separated_flows":
             {
                 "model":  "SEP",
+                "generate_directory": true,
                 "mesh_command": false,
                 "blending": false,
                 "theta": "(0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)",
                 "thetaR": "(0.681 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)",
                 "preprocess_command": "potentialFoam",
                 "decompose_command": "decomposePar -latestTime",
-                "simulation_command": "mpirun -np 8 simpleFoamFeatures -parallel > log.OpenFOAM && reconstructPar -latestTime"
+                "simulation_command": "mpirun -np 8 simpleFoamFeatures -parallel > log.OpenFOAM && reconstructPar -latestTime",
+                "postprocess_command": "./postprocess.sh > log.postProcess"
             }
     },
 
         "blending":
             {
                 "model":  "Blend",
+                "generate_directory": true,
                 "mesh_command": false,
                 "blending": ["CHAN", "ANSJ", "SEP"],
                 "theta_CHAN" : "(0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)",

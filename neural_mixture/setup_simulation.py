@@ -64,11 +64,10 @@ def main():
 
         # Copy the directory
         target_dir = os.path.join(setup_dict["home_directory"], simulation_setup["model"])
-        os.system(f"cp -r {base_dir} {target_dir}")
 
-        update_turbulence_properties(setup_dict, simulation_setup)
-
-        # Update the turbulence properties file with the new coefficients
+        if not(simulation_setup.get("generate_directory", False) == False):
+            os.system(f"cp -r {base_dir} {target_dir}")
+            update_turbulence_properties(setup_dict, simulation_setup)
 
         # Mesh, decompose and run the simulation  
         if not(simulation_setup.get("mesh_command", False) == False):
@@ -84,6 +83,9 @@ def main():
         if not(simulation_setup.get("simulation_command", False) == False):
             subprocess.Popen( simulation_setup['simulation_command'], shell=True, 
                 cwd=target_dir, stdout=None, stderr=None)
+        
+        if not(simulation_setup.get("postprocess_command", False) == False):
+            os.system(f"cd {target_dir} && {simulation_setup['postprocess_command']}")
 
 
 if __name__ == "__main__":

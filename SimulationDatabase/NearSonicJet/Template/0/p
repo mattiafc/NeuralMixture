@@ -1,0 +1,103 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  2306                                  |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    arch        "LSB;label=32;scalar=64";
+    class       volScalarField;
+    location    "5000";
+    object      p;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+dimensions      [1 -1 -2 0 0 0 0];
+
+internalField   uniform 101325;
+
+boundaryField
+{
+    axis
+    {
+        type            empty;
+    }
+    inlet
+    {
+        type            totalPressure;
+        rho             rho;
+        psi             none;
+        gamma           1;
+        p0              uniform 188565.83;
+        value           nonuniform List<scalar> 
+24
+(
+187977.44
+187977.2
+187977.01
+187977.02
+187978.49
+187981.97
+187988.97
+188001.27
+188019.2
+188040.3
+188060.03
+188074.87
+188084.06
+188088.95
+188091.23
+188092.02
+188091.91
+188091.82
+188091.76
+188091.74
+188091.75
+188091.79
+188091.83
+188091.85
+)
+;
+    }
+    wedge1
+    {
+        type            wedge;
+    }
+    wedge2
+    {
+        type            wedge;
+    }
+    wall1
+    {
+        type            zeroGradient;
+    }
+    inflow1
+    {
+        type            fixedValue;
+        value           uniform 101325;
+    }
+    wall2
+    {
+        type            zeroGradient;
+    }
+    inflow2
+    {
+        type            fixedValue;
+        value           uniform 101325;
+    }
+    outlet
+    {
+        type            zeroGradient;
+    }
+    wall3
+    {
+        type            zeroGradient;
+    }
+}
+
+
+// ************************************************************************* //
