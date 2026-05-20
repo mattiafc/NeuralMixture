@@ -1,0 +1,7 @@
+{
+    "home_directory": "./",
+    "dataset_directory": "/home/mciarlatani/DataDrivenML/MachineLearning",
+    "dataset_list":["CBFS13700"],
+    "U_ref": {"CBFS13700": 1.0}
+    "p_ref": {"CBFS13700": 1.0}
+}

@@ -1,7 +1,8 @@
 {
     "database_home_directory": "/home/mciarlatani/DataDrivenML/Database",
     "output_database_directory": "/home/mciarlatani/DataDrivenML/MachineLearning",
-    "features":["eta_1","eta_2","eta_3","eta_4","eta_5","eta_6","eta_7","eta_8","eta_9","eta_10","eta_11"],
+    "features":["U","grad(U)","p","grad(p)","k","grad(k)","Rall","nut","grad(nut)",
+                "eta_1","eta_2","eta_3","eta_4","eta_5","eta_6","eta_7","eta_8","eta_9","eta_10","eta_11"],
     "models_order": ["ANSJ","CHAN","SEP"],
     "time_folder":"5000",
     "HF_name":"Exact",
