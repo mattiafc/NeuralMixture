@@ -1,0 +1,17 @@
+    {
+        "baseline": {
+            "case":  "case.foam",
+            "fName": "Baseline",
+            "color": "tab:green",
+            "label": "RANS simulation",
+            "extract": true,
+            "solver": "OpenFOAM"
+        },
+        "LES": {
+            "fName": "OP1_Fine_LES",
+            "color": "tab:blue",
+            "label": "Fine LES",
+            "extract": false,
+            "solver": "MUSICAA"
+        }
+    }

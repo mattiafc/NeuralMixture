@@ -290,12 +290,15 @@ def main():
 
     for c in cases:
         if cases[c].get("case"):
+
+            #Runs the postprocessing script extract_data_all.py and generate the postprocessed .csv
             _script = _PKG_DIR / "extract_data_all.py"
             os.system(f'pvpython {_script} {cases[c]["case"]} {cases[c]["fName"]}')
 
         df_profile  = pd.read_csv(cases[c]["fName"] + "_Mis.csv")
         df_upstream = pd.read_csv(cases[c]["fName"] + "_MP1.csv")
 
+        #Compares the RANS Mach, density, Temperature, and Pressure to the LES to verify matching conditions
         if cases["LES"]:
             df_LES_MP1 = pd.read_csv(f"{cases["LES"]["fName"]}_MP1.csv")
             MP1_compare += (f'Case {c}: M_in RANS = {np.mean(df_upstream["M"]):.6g}; M_in LES = {np.mean(df_LES_MP1["M"]):.6g}\n')
@@ -310,13 +313,17 @@ def main():
             if air.empty:
                 print(f"[INFO] {c}: no 'airfoil' block in Mis CSV")
 
+            # Normalizes the x coordinate to be in [0;1]
             air["x_over_l"] = air["Points_0"] / np.max(air["Points_0"].to_numpy(float))
+            
+            # Computes total pressure upstream of the blade
             P0 = np.mean(
                 df_upstream["p"].to_numpy()
                 * (1 + (gamma - 1) / 2 * df_upstream["M"].to_numpy() ** 2) ** (gamma / (gamma - 1))
             )
             air["Mis_from_p"] = isentropic_mach_from_p(air["p"].to_numpy(), P0, gamma)
 
+            # Splits the suction and pressure side of the blade
             try:
                 suctSide, presSide, air = build_side_curves_and_classify(air)
             except Exception as e:
@@ -331,6 +338,7 @@ def main():
             cases[c]["suctSide"] = suctSide
             cases[c]["presSide"] = presSide
             
+            # Plots the Mach number on the blade
             ax_mis.plot(
                 cases[c]["presSide"]["x_over_l"], cases[c]["presSide"]["Mis_from_p"],
                 linestyle="-.", linewidth=3,
@@ -341,7 +349,9 @@ def main():
                 linestyle="-.", linewidth=3, color=cases[c]["color"],
             )
         else:
-
+            
+            
+            # Plots the Mach number on the blade if the output comes from MUSICAA
             ax_mis.plot(
                 df_profile["xw"] / np.max(df_profile["xw"]),
                 df_profile["M_is"],
@@ -354,6 +364,7 @@ def main():
     ax_mis.grid(True, alpha=1)
     ax_mis.legend(ncols=2)
 
+    # Computes the pressure loss
     for c in cases:
         mp1 = f"{cases[c]['fName']}_MP1.csv"
         mp2 = f"{cases[c]['fName']}_MP2.csv"
@@ -362,6 +373,7 @@ def main():
         else:
             div = 1.0
         df = compute_massaverage_pressure_loss(mp1, mp2, gamma, R)
+        # MUSICAA y output is in mm
         ax_loss.plot(df["y"] / c_ref/div, df["loss"],
                      label=cases[c]["label"], color=cases[c]["color"], linewidth=3)
 
