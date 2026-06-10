@@ -57,6 +57,14 @@ keys_weights_export = ["Jet_NearSonic","Jet_NearSonic_augmented", "Jet_NearSonic
 cases = ["Jet_NearSonic", "CD12600", "channel1000_2D", "PH10595", "CBFS13700"]#
 models = ["Frozen", "ANSJ", "CHAN", "SEP"]#
 
+#Setup to run training on ADP & testing on OP1
+case_type = {'ANSJ':["Jet_NearSonic_projected"], 'CHAN':["channel1000_2D"], 'SEP':["PH10595" , "CBFS13700", "CD12600","LRN_OGV_ADP"]} #
+selected_training_cases = ["Jet_NearSonic_projected", "channel1000_2D", "PH10595", "CBFS13700", "CD12600","LRN_OGV_ADP"]
+keys_weights_export = ["Jet_NearSonic","Jet_NearSonic_augmented", "Jet_NearSonic_projected", "Jet_NearSonic_restricted", "CD12600", "channel1000_2D", "PH10595", "CBFS13700","LRN_OGV_ADP"]
+#Check this line
+cases = ["Jet_NearSonic", "CD12600", "channel1000_2D", "PH10595", "CBFS13700","LRN_OGV_ADP","LRN_OGV_OP1"]#
+models = ["Frozen", "ANSJ", "CHAN", "SEP"]#
+
 
 print ("post-process jet data, this will change the dic and add new Jet_proj")		
 dic_data = create_dic_data(FeaturesChoice, cases, models)

@@ -300,10 +300,14 @@ dict_input_case = {'pitch': pitch, 'cax': 1, 'x1': -20.108296, 'x2': 87.25188, '
 
 # input_dir_OP1_pok = "/home/mciarlatani/Irene/validation_cases/deltaP_good/MUSICAA/musicaa_g0_c0/OP1" # "OP1"
 
-input_dir_OP2 = "Ling/MUSICAA/musicaa_g0_c0/OP2" # "OP2"
-x_OF,y_OF = read_openfoam_centers('Ling/cascade_2geo/','0')
+input_dir_MUSICAA = "Ling/MUSICAA/musicaa_g0_c0/OP2" # "OP2"
+openFOAM_mesh_directory = 'Ling/cascade_2geo/'
 
-OP2 = read_musicaa_case(input_dir_OP2, dict_input_case)
+# Read the cell centers of the mesh you want to interpolate to
+# Need to have C, Cx, Cy, and Cz from OpenFOAM
+x_OF,y_OF = read_openfoam_centers(openFOAM_mesh_directory,'0')
+
+OP2 = read_musicaa_case(input_dir_MUSICAA, dict_input_case)
 
 match_bl = [[10,2,pitch],[11,5,pitch],[12,9,pitch],[13,1,pitch],[14,2,2*pitch]]
 
